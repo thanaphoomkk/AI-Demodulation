@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Demodulation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1e3a5f, #0f172a);
+    padding: 20px 32px;
+    border-bottom: 1px solid #1e40af;
+    display: flex; align-items: center; gap: 12px;
+  }
+  header h1 { font-size: 1.5rem; color: #60a5fa; }
+  header span { font-size: 0.9rem; color: #94a3b8; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .tab-btn {
+    padding: 10px 24px; border: none; border-radius: 8px;
+    cursor: pointer; font-size: 0.95rem; font-weight: 600;
+    background: #1e293b; color: #94a3b8; transition: all .2s;
+  }
+  .tab-btn.active { background: #2563eb; color: #fff; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Card */
+  .card {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 12px; padding: 24px; margin-bottom: 20px;
+  }
+  .card h2 { font-size: 1.05rem; color: #93c5fd; margin-bottom: 16px; }
+
+  /* Form controls */
+  .form-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 0.82rem; color: #94a3b8; }
+  select, input[type=range], input[type=number] {
+    background: #0f172a; color: #e2e8f0;
+    border: 1px solid #334155; border-radius: 6px;
+    padding: 8px 12px; font-size: 0.9rem;
+  }
+  select { min-width: 130px; cursor: pointer; }
+  input[type=range] { width: 160px; padding: 4px 0; cursor: pointer; }
+  input[type=file] { color: #94a3b8; font-size: 0.88rem; }
+
+  .snr-label { color: #60a5fa; font-weight: 700; min-width: 48px; display: inline-block; }
+
+  button.run-btn {
+    background: #2563eb; color: #fff; border: none;
+    border-radius: 8px; padding: 10px 28px;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    transition: background .2s;
+  }
+  button.run-btn:hover { background: #1d4ed8; }
+  button.run-btn:disabled { background: #475569; cursor: not-allowed; }
+
+  /* Result */
+  .result-card { display: none; }
+  .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat-box {
+    background: #0f172a; border: 1px solid #334155;
+    border-radius: 8px; padding: 14px 20px; min-width: 160px;
+  }
+  .stat-box .val { font-size: 1.4rem; font-weight: 700; color: #34d399; }
+  .stat-box .lbl { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+  .stat-box.ber .val { color: #f87171; }
+
+  /* bit output */
+  .bit-output {
+    background: #020617; border: 1px solid #1e40af;
+    border-radius: 8px; padding: 14px 16px;
+    font-family: 'Courier New', monospace; font-size: 0.88rem;
+    color: #4ade80; word-break: break-all; line-height: 1.7;
+    max-height: 120px; overflow-y: auto; margin-bottom: 20px;
+  }
+
+  /* plots */
+  .plots { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .plots img { width: 100%; border-radius: 8px; border: 1px solid #334155; }
+  .plot-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* spinner */
+  .spinner {
+    display: none; width: 22px; height: 22px;
+    border: 3px solid #334155; border-top-color: #60a5fa;
+    border-radius: 50%; animation: spin .7s linear infinite;
+    margin-left: 12px; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg { color: #f87171; margin-top: 12px; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📡 AI Demodulation</h1>
+    <span>ถอดรหัสสัญญาณ BPSK / QPSK / QAM16 → บิต 0/1</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('gen')">สร้างสัญญาณจำลอง</button>
+    <button class="tab-btn" onclick="switchTab('upload')">อัปโหลดไฟล์ IQ</button>
+  </div>
+
+  <!-- Tab: Generate -->
+  <div id="tab-gen" class="tab-panel active">
+    <div class="card">
+      <h2>ตั้งค่าสัญญาณ</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Modulation</label>
+          <select id="gen-mod">
+            {% for m in mods %}
+            <option value="{{ m }}">{{ m.upper() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>SNR: <span class="snr-label" id="snr-val">10 dB</span></label>
+          <input type="range" id="gen-snr" min="-5" max="25" value="10"
+                 oninput="document.getElementById('snr-val').textContent=this.value+' dB'">
+        </div>
+        <div class="form-group">
+          <label>จำนวนสัญลักษณ์</label>
+          <input type="number" id="gen-nsym" value="64" min="8" max="512" style="width:100px">
+        </div>
+        <div class="form-group">
+          <button class="run-btn" id="gen-btn" onclick="runGenerate()">
+            สร้างและถอดรหัส
+          </button>
+          <div class="spinner" id="gen-spin"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="gen-err"></div>
+    </div>
+
+    <div class="card result-card" id="gen-result">
+      <h2>ผลลัพธ์</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="val" id="gen-total">—</div>
+          <div class="lbl">จำนวนบิตทั้งหมด</div>
+        </div>
+        <div class="stat-box ber">
+          <div class="val" id="gen-ber">—</div>
+          <div class="lbl">Bit Error Rate (BER)</div>
+        </div>
+      </div>
+      <div style="font-size:0.82rem; color:#64748b; margin-bottom:6px;">
+        บิต 0/1 (128 บิตแรก):
+      </div>
+      <div class="bit-output" id="gen-bits"></div>
+      <div class="plots">
+        <img id="gen-wave" src="" alt="waveform">
+        <div class="plot-row">
+          <img id="gen-const" src="" alt="constellation">
+          <img id="gen-bstream" src="" alt="bitstream">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Upload -->
+  <div id="tab-upload" class="tab-panel">
+    <div class="card">
+      <h2>อัปโหลดไฟล์ IQ (.csv)</h2>
+      <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:14px;">
+        รูปแบบไฟล์: แต่ละบรรทัดคือ <code style="color:#60a5fa">I,Q</code>
+        เช่น <code style="color:#60a5fa">0.707,0.707</code>
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Modulation</label>
+          <select id="up-mod">
+            {% for m in digital_mods %}
+            <option value="{{ m }}">{{ m.upper() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Samples per Symbol (SPS)</label>
+          <input type="number" id="up-sps" value="1" min="1" max="32" style="width:90px">
+        </div>
+        <div class="form-group">
+          <label>เลือกไฟล์ CSV</label>
+          <input type="file" id="up-file" accept=".csv,.txt">
+        </div>
+        <div class="form-group">
+          <button class="run-btn" id="up-btn" onclick="runUpload()">
+            ถอดรหัส
+          </button>
+          <div class="spinner" id="up-spin"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="up-err"></div>
+    </div>
+
+    <div class="card result-card" id="up-result">
+      <h2>ผลลัพธ์</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="val" id="up-total">—</div>
+          <div class="lbl">จำนวนบิตทั้งหมด</div>
+        </div>
+      </div>
+      <div style="font-size:0.82rem; color:#64748b; margin-bottom:6px;">
+        บิต 0/1 (128 บิตแรก):
+      </div>
+      <div class="bit-output" id="up-bits"></div>
+      <div class="plots">
+        <img id="up-wave" src="" alt="waveform">
+        <div class="plot-row">
+          <img id="up-const" src="" alt="constellation">
+          <img id="up-bstream" src="" alt="bitstream">
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', (t==='gen'&&i===0)||(t==='upload'&&i===1)));
+  document.getElementById('tab-gen').classList.toggle('active', t==='gen');
+  document.getElementById('tab-upload').classList.toggle('active', t==='upload');
+}
+
+function showResult(prefix, data) {
+  const card = document.getElementById(prefix+'-result');
+  card.style.display = 'block';
+
+  document.getElementById(prefix+'-bits').textContent = data.bits;
+  document.getElementById(prefix+'-total').textContent = data.total_bits.toLocaleString();
+
+  if (prefix === 'gen') {
+    const berEl = document.getElementById('gen-ber');
+    berEl.textContent = data.ber !== null ? data.ber.toFixed(4) : 'N/A';
+  }
+
+  document.getElementById(prefix+'-wave').src   = 'data:image/png;base64,'+data.plots.waveform;
+  document.getElementById(prefix+'-const').src  = 'data:image/png;base64,'+data.plots.constellation;
+  document.getElementById(prefix+'-bstream').src= 'data:image/png;base64,'+data.plots.bitstream;
+}
+
+async function runGenerate() {
+  const btn  = document.getElementById('gen-btn');
+  const spin = document.getElementById('gen-spin');
+  const err  = document.getElementById('gen-err');
+  err.textContent = '';
+  btn.disabled = true; spin.style.display = 'inline-block';
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mod:      document.getElementById('gen-mod').value,
+        snr:      document.getElementById('gen-snr').value,
+        n_symbols:document.getElementById('gen-nsym').value,
+      })
+    });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+    showResult('gen', data);
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+  }
+}
+
+async function runUpload() {
+  const btn  = document.getElementById('up-btn');
+  const spin = document.getElementById('up-spin');
+  const err  = document.getElementById('up-err');
+  err.textContent = '';
+
+  const file = document.getElementById('up-file').files[0];
+  if (!file) { err.textContent = 'กรุณาเลือกไฟล์ก่อน'; return; }
+
+  btn.disabled = true; spin.style.display = 'inline-block';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('mod',  document.getElementById('up-mod').value);
+    fd.append('sps',  document.getElementById('up-sps').value);
+
+    const res  = await fetch('/api/upload', { method:'POST', body: fd });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+    showResult('up', data);
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
