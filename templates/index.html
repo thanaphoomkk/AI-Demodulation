@@ -19,7 +19,6 @@
 
   .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px; }
 
-  /* Tabs */
   .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
   .tab-btn {
     padding: 10px 24px; border: none; border-radius: 8px;
@@ -27,18 +26,15 @@
     background: #1e293b; color: #94a3b8; transition: all .2s;
   }
   .tab-btn.active { background: #2563eb; color: #fff; }
-
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  /* Card */
   .card {
     background: #1e293b; border: 1px solid #334155;
     border-radius: 12px; padding: 24px; margin-bottom: 20px;
   }
   .card h2 { font-size: 1.05rem; color: #93c5fd; margin-bottom: 16px; }
 
-  /* Form controls */
   .form-row { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   label { font-size: 0.82rem; color: #94a3b8; }
@@ -50,44 +46,58 @@
   select { min-width: 130px; cursor: pointer; }
   input[type=range] { width: 160px; padding: 4px 0; cursor: pointer; }
   input[type=file] { color: #94a3b8; font-size: 0.88rem; }
-
   .snr-label { color: #60a5fa; font-weight: 700; min-width: 48px; display: inline-block; }
 
   button.run-btn {
     background: #2563eb; color: #fff; border: none;
     border-radius: 8px; padding: 10px 28px;
-    font-size: 0.95rem; font-weight: 600; cursor: pointer;
-    transition: background .2s;
+    font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background .2s;
   }
   button.run-btn:hover { background: #1d4ed8; }
   button.run-btn:disabled { background: #475569; cursor: not-allowed; }
 
-  /* Result */
-  .result-card { display: none; }
-  .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
-  .stat-box {
-    background: #0f172a; border: 1px solid #334155;
-    border-radius: 8px; padding: 14px 20px; min-width: 160px;
+  .method-badge {
+    display: inline-block; padding: 4px 14px; border-radius: 20px;
+    font-size: 0.82rem; font-weight: 700; margin-bottom: 18px;
   }
-  .stat-box .val { font-size: 1.4rem; font-weight: 700; color: #34d399; }
-  .stat-box .lbl { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-  .stat-box.ber .val { color: #f87171; }
+  .method-badge.ai                { background: #064e3b; color: #34d399; border: 1px solid #34d399; }
+  .method-badge.classical_fallback{ background: #1e3a5f; color: #60a5fa; border: 1px solid #60a5fa; }
+  .method-badge.analog            { background: #2d1b69; color: #a78bfa; border: 1px solid #a78bfa; }
 
-  /* bit output */
+  .compare-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;
+  }
+  .compare-box {
+    background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 16px;
+  }
+  .compare-box h3 { font-size: 0.9rem; margin-bottom: 10px; }
+  .compare-box.ai-box h3 { color: #34d399; }
+  .compare-box.cl-box h3 { color: #60a5fa; }
+
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .stat-box {
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 8px; padding: 10px 16px; min-width: 110px;
+  }
+  .stat-box .val { font-size: 1.2rem; font-weight: 700; color: #34d399; }
+  .stat-box .lbl { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+  .stat-box.ber  .val { color: #f87171; }
+
   .bit-output {
     background: #020617; border: 1px solid #1e40af;
-    border-radius: 8px; padding: 14px 16px;
-    font-family: 'Courier New', monospace; font-size: 0.88rem;
+    border-radius: 6px; padding: 10px 14px;
+    font-family: 'Courier New', monospace; font-size: 0.85rem;
     color: #4ade80; word-break: break-all; line-height: 1.7;
-    max-height: 120px; overflow-y: auto; margin-bottom: 20px;
+    max-height: 90px; overflow-y: auto;
   }
+  .compare-box.cl-box .bit-output { color: #93c5fd; }
 
-  /* plots */
+  .result-card { display: none; }
+
   .plots { display: grid; grid-template-columns: 1fr; gap: 16px; }
   .plots img { width: 100%; border-radius: 8px; border: 1px solid #334155; }
-  .plot-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .plot-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-  /* spinner */
   .spinner {
     display: none; width: 22px; height: 22px;
     border: 3px solid #334155; border-top-color: #60a5fa;
@@ -95,8 +105,12 @@
     margin-left: 12px; vertical-align: middle;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .error-msg { color: #f87171; margin-top: 12px; font-size: 0.9rem; }
+
+  @media (max-width: 640px) {
+    .compare-grid { grid-template-columns: 1fr; }
+    .plot-row     { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -104,13 +118,12 @@
 <header>
   <div>
     <h1>📡 AI Demodulation</h1>
-    <span>ถอดรหัสสัญญาณ BPSK / QPSK / QAM16 → บิต 0/1</span>
+    <span>ถอดรหัสสัญญาณ BPSK / QPSK / QAM → บิต 0/1 ด้วย AI และ Classical</span>
   </div>
 </header>
 
 <div class="container">
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('gen')">สร้างสัญญาณจำลอง</button>
     <button class="tab-btn" onclick="switchTab('upload')">อัปโหลดไฟล์ IQ</button>
@@ -139,9 +152,12 @@
           <input type="number" id="gen-nsym" value="64" min="8" max="512" style="width:100px">
         </div>
         <div class="form-group">
-          <button class="run-btn" id="gen-btn" onclick="runGenerate()">
-            สร้างและถอดรหัส
-          </button>
+          <label>Carrier freq: <span class="snr-label" id="fc-val">0.10</span></label>
+          <input type="range" id="gen-fc" min="1" max="45" value="10"
+                 oninput="document.getElementById('fc-val').textContent=(this.value/100).toFixed(2)">
+        </div>
+        <div class="form-group">
+          <button class="run-btn" id="gen-btn" onclick="runGenerate()">สร้างและถอดรหัส</button>
           <div class="spinner" id="gen-spin"></div>
         </div>
       </div>
@@ -150,25 +166,53 @@
 
     <div class="card result-card" id="gen-result">
       <h2>ผลลัพธ์</h2>
-      <div class="stats">
-        <div class="stat-box">
-          <div class="val" id="gen-total">—</div>
-          <div class="lbl">จำนวนบิตทั้งหมด</div>
+      <div id="gen-badge" class="method-badge"></div>
+
+      <!-- บิตต้นทาง -->
+      <div class="compare-box" style="background:#1a1200;border-color:#92400e;margin-bottom:16px;">
+        <h3 style="color:#f59e0b;">📤 บิตต้นทาง (Original)</h3>
+        <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">บิต 0/1 (128 บิตแรก):</div>
+        <div class="bit-output" id="gen-bits-src" style="color:#fbbf24;border-color:#92400e;"></div>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-box ai-box">
+          <h3>🤖 AI Demodulation</h3>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="val" id="gen-total-ai">—</div>
+              <div class="lbl">จำนวนบิต</div>
+            </div>
+            <div class="stat-box ber">
+              <div class="val" id="gen-ber-ai">—</div>
+              <div class="lbl">BER</div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">บิต 0/1 (128 บิตแรก):</div>
+          <div class="bit-output" id="gen-bits-ai"></div>
         </div>
-        <div class="stat-box ber">
-          <div class="val" id="gen-ber">—</div>
-          <div class="lbl">Bit Error Rate (BER)</div>
+        <div class="compare-box cl-box">
+          <h3>📐 Classical Demodulation</h3>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="val" id="gen-total-cl">—</div>
+              <div class="lbl">จำนวนบิต</div>
+            </div>
+            <div class="stat-box ber">
+              <div class="val" id="gen-ber-cl">—</div>
+              <div class="lbl">BER</div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">บิต 0/1 (128 บิตแรก):</div>
+          <div class="bit-output" id="gen-bits-cl"></div>
         </div>
       </div>
-      <div style="font-size:0.82rem; color:#64748b; margin-bottom:6px;">
-        บิต 0/1 (128 บิตแรก):
-      </div>
-      <div class="bit-output" id="gen-bits"></div>
+
       <div class="plots">
-        <img id="gen-wave" src="" alt="waveform">
+        <img id="gen-wave" src="" alt="waveform" style="margin-bottom:12px;">
         <div class="plot-row">
           <img id="gen-const" src="" alt="constellation">
-          <img id="gen-bstream" src="" alt="bitstream">
+          <img id="gen-decode-bar" src="" alt="decode result">
         </div>
       </div>
     </div>
@@ -200,9 +244,7 @@
           <input type="file" id="up-file" accept=".csv,.txt">
         </div>
         <div class="form-group">
-          <button class="run-btn" id="up-btn" onclick="runUpload()">
-            ถอดรหัส
-          </button>
+          <button class="run-btn" id="up-btn" onclick="runUpload()">ถอดรหัส</button>
           <div class="spinner" id="up-spin"></div>
         </div>
       </div>
@@ -211,51 +253,96 @@
 
     <div class="card result-card" id="up-result">
       <h2>ผลลัพธ์</h2>
-      <div class="stats">
-        <div class="stat-box">
-          <div class="val" id="up-total">—</div>
-          <div class="lbl">จำนวนบิตทั้งหมด</div>
+      <div id="up-badge" class="method-badge"></div>
+
+      <div class="compare-grid">
+        <div class="compare-box ai-box">
+          <h3>🤖 AI Demodulation</h3>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="val" id="up-total-ai">—</div>
+              <div class="lbl">จำนวนบิต</div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">บิต 0/1 (128 บิตแรก):</div>
+          <div class="bit-output" id="up-bits-ai"></div>
+        </div>
+        <div class="compare-box cl-box">
+          <h3>📐 Classical Demodulation</h3>
+          <div class="stats">
+            <div class="stat-box">
+              <div class="val" id="up-total-cl">—</div>
+              <div class="lbl">จำนวนบิต</div>
+            </div>
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:4px;">บิต 0/1 (128 บิตแรก):</div>
+          <div class="bit-output" id="up-bits-cl"></div>
         </div>
       </div>
-      <div style="font-size:0.82rem; color:#64748b; margin-bottom:6px;">
-        บิต 0/1 (128 บิตแรก):
-      </div>
-      <div class="bit-output" id="up-bits"></div>
+
       <div class="plots">
-        <img id="up-wave" src="" alt="waveform">
+        <img id="up-wave" src="" alt="waveform" style="margin-bottom:12px;">
         <div class="plot-row">
           <img id="up-const" src="" alt="constellation">
-          <img id="up-bstream" src="" alt="bitstream">
+          <img id="up-decode-bar" src="" alt="decode result">
         </div>
       </div>
     </div>
   </div>
 
-</div><!-- /container -->
+</div>
 
 <script>
 function switchTab(t) {
+  const tabs = ['gen','upload'];
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
-    b.classList.toggle('active', (t==='gen'&&i===0)||(t==='upload'&&i===1)));
-  document.getElementById('tab-gen').classList.toggle('active', t==='gen');
-  document.getElementById('tab-upload').classList.toggle('active', t==='upload');
+    b.classList.toggle('active', tabs[i] === t));
+  tabs.forEach(id =>
+    document.getElementById('tab-'+id).classList.toggle('active', id === t));
+}
+
+const METHOD_LABEL = {
+  ai:                  { text: '🤖 ใช้ AI Model',                cls: 'ai' },
+  classical_fallback:  { text: '📐 Classical (ยังไม่มีโมเดล AI)', cls: 'classical_fallback' },
+  analog:              { text: '〰️ Analog Signal',               cls: 'analog' },
+};
+
+function setBadge(id, method) {
+  const el = document.getElementById(id);
+  const m  = METHOD_LABEL[method] || METHOD_LABEL.analog;
+  el.textContent = m.text;
+  el.className   = 'method-badge ' + m.cls;
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function setSrc(id, b64) {
+  const el = document.getElementById(id);
+  if (el) el.src = 'data:image/png;base64,' + b64;
 }
 
 function showResult(prefix, data) {
-  const card = document.getElementById(prefix+'-result');
-  card.style.display = 'block';
+  document.getElementById(prefix+'-result').style.display = 'block';
+  setBadge(prefix+'-badge', data.method);
 
-  document.getElementById(prefix+'-bits').textContent = data.bits;
-  document.getElementById(prefix+'-total').textContent = data.total_bits.toLocaleString();
+  if (data.bits_source) setEl(prefix+'-bits-src', data.bits_source);
+  setEl(prefix+'-bits-ai', data.bits_ai);
+  setEl(prefix+'-bits-cl', data.bits_classical);
+  setEl(prefix+'-total-ai', data.total_bits.toLocaleString());
+  setEl(prefix+'-total-cl', data.total_bits.toLocaleString());
 
-  if (prefix === 'gen') {
-    const berEl = document.getElementById('gen-ber');
-    berEl.textContent = data.ber !== null ? data.ber.toFixed(4) : 'N/A';
-  }
+  if (data.ber_ai !== null && data.ber_ai !== undefined)
+    setEl(prefix+'-ber-ai', data.ber_ai.toFixed(4));
+  if (data.ber_classical !== null && data.ber_classical !== undefined)
+    setEl(prefix+'-ber-cl', data.ber_classical.toFixed(4));
 
-  document.getElementById(prefix+'-wave').src   = 'data:image/png;base64,'+data.plots.waveform;
-  document.getElementById(prefix+'-const').src  = 'data:image/png;base64,'+data.plots.constellation;
-  document.getElementById(prefix+'-bstream').src= 'data:image/png;base64,'+data.plots.bitstream;
+  setSrc(prefix+'-wave',  data.plots.waveform);
+  setSrc(prefix+'-const', data.plots.constellation);
+  if (data.plots.decode_bar)
+    setSrc(prefix+'-decode-bar', data.plots.decode_bar);
 }
 
 async function runGenerate() {
@@ -264,15 +351,15 @@ async function runGenerate() {
   const err  = document.getElementById('gen-err');
   err.textContent = '';
   btn.disabled = true; spin.style.display = 'inline-block';
-
   try {
-    const res = await fetch('/api/generate', {
+    const res  = await fetch('/api/generate', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        mod:      document.getElementById('gen-mod').value,
-        snr:      document.getElementById('gen-snr').value,
-        n_symbols:document.getElementById('gen-nsym').value,
+        mod:       document.getElementById('gen-mod').value,
+        snr:       document.getElementById('gen-snr').value,
+        n_symbols: document.getElementById('gen-nsym').value,
+        fc:        document.getElementById('gen-fc').value / 100,
       })
     });
     const data = await res.json();
@@ -290,17 +377,14 @@ async function runUpload() {
   const spin = document.getElementById('up-spin');
   const err  = document.getElementById('up-err');
   err.textContent = '';
-
   const file = document.getElementById('up-file').files[0];
   if (!file) { err.textContent = 'กรุณาเลือกไฟล์ก่อน'; return; }
-
   btn.disabled = true; spin.style.display = 'inline-block';
   try {
     const fd = new FormData();
     fd.append('file', file);
     fd.append('mod',  document.getElementById('up-mod').value);
     fd.append('sps',  document.getElementById('up-sps').value);
-
     const res  = await fetch('/api/upload', { method:'POST', body: fd });
     const data = await res.json();
     if (data.error) { err.textContent = data.error; return; }
@@ -311,6 +395,7 @@ async function runUpload() {
     btn.disabled = false; spin.style.display = 'none';
   }
 }
+
 </script>
 </body>
 </html>
