@@ -101,12 +101,12 @@ def main() -> None:
     X_train, y_train = generate_dataset(
         args.mod, n_examples=args.n_train,
         symbols_per_example=args.symbols, sps=args.sps,
-        snr_range=(0, 20), seed=args.seed,
+        snr_range=(-5, 25), seed=args.seed,
     )
     X_val, y_val = generate_dataset(
         args.mod, n_examples=args.n_val,
         symbols_per_example=args.symbols, sps=args.sps,
-        snr_range=(0, 20), seed=args.seed + 1,
+        snr_range=(-5, 25), seed=args.seed + 1,
     )
     print(f"  X_train={X_train.shape}, y_train={y_train.shape}")
     print(f"  X_val  ={X_val.shape}, y_val  ={y_val.shape}")
