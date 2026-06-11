@@ -83,12 +83,40 @@ def downsample(iq: np.ndarray, sps: int) -> np.ndarray:
     return iq[offset::sps]
 
 
+def matched_filter(iq: np.ndarray, sps: int, beta: float = 0.35) -> np.ndarray:
+    """
+    Matched Filter สำหรับ RRC pulse shaping
+
+    หลักการ: เมื่อ TX ใช้ RRC filter ปั้นพัลส์ RX ต้องผ่าน RRC filter อีกครั้ง
+    (RRC * RRC = RC) เพื่อกำจัด ISI และ maximize SNR ที่จุด sampling
+
+    ขั้นตอน:
+      1. convolve สัญญาณ noisy กับ RRC filter เดียวกับ TX
+      2. downsample ที่กลาง symbol (ซึ่งตอนนี้ไม่มี ISI แล้ว)
+    """
+    if sps <= 1:
+        return iq
+    from generate_signal import rrc_filter
+    h = rrc_filter(beta, sps).astype(np.complex64)
+    # TX ใช้ RRC ไปแล้ว 1 ครั้ง (delay=half_len) RX filter เพิ่มอีก 1 ครั้ง
+    # รวม total group delay = 2 * half_len  แต่ mode="full" เริ่มต้นที่ index 0
+    # ดังนั้น sample แรกที่ไม่มี ISI อยู่ที่ index = 2*half_len + sps//2
+    half_len = (len(h) - 1) // 2
+    filtered = np.convolve(iq, h, mode="full")
+    # TX ใช้ RRC แล้ว 1 รอบ  RX filter เพิ่มอีก 1 รอบ
+    # peak ของ RC pulse (RRC*RRC) เกิดที่ delay = half_len samples หลัง iq เริ่ม
+    # แต่ mode="full" ทำให้ output ยาวขึ้น → peak อยู่ที่ half_len - sps//2 + 1
+    start = half_len - sps // 2 + 1
+    return filtered[start::sps]
+
+
 def demodulate(iq: np.ndarray, mod_type: str, sps: int = 1) -> list[int]:
     """
     รับ IQ array (complex) คืนบิต 0/1
+    ถ้า sps > 1 จะผ่าน Matched Filter (integrate-and-dump) ก่อนตัดสินใจ
 
-    iq       : complex ndarray  (ถ้า sps>1 จะ downsample ก่อน)
-    mod_type : 'bpsk' | 'qpsk' | 'qam16' | 'qam64' | 'qam256'
+    iq       : complex ndarray
+    mod_type : 'bpsk' | 'qpsk' | 'qam8' | 'qam16' | 'qam64'
     sps      : samples ต่อสัญลักษณ์
     """
     mod_type = mod_type.lower()
@@ -97,8 +125,8 @@ def demodulate(iq: np.ndarray, mod_type: str, sps: int = 1) -> list[int]:
 
     const, bit_table = CONSTELLATIONS[mod_type]
 
-    # downsample ถ้าจำเป็น
-    symbols = downsample(iq, sps) if sps > 1 else iq
+    # Matched Filter (integrate-and-dump) แทน downsample เฉยๆ
+    symbols = matched_filter(iq, sps) if sps > 1 else iq
 
     bits: list[int] = []
     for sym in symbols:
