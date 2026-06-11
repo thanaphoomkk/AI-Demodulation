@@ -386,6 +386,28 @@
           <img id="wl-plot-result" src="" alt="decode result">
         </div>
       </div>
+
+      <!-- BER Curve section -->
+      <div style="border-top:1px solid #334155;margin-top:24px;padding-top:20px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+          <span style="color:#93c5fd;font-weight:700;font-size:0.95rem;">📈 BER vs SNR Curve</span>
+          <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
+            <label style="white-space:nowrap;">Trials per SNR:</label>
+            <input type="number" id="wl-trials" value="50" min="10" max="500" style="width:80px;">
+          </div>
+          <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
+            <label style="white-space:nowrap;">Symbols per trial:</label>
+            <input type="number" id="wl-ber-nsym" value="128" min="16" max="1024" style="width:90px;">
+          </div>
+          <button class="run-btn" id="wl-ber-btn" onclick="runWaveLabBER()"
+                  style="padding:8px 20px;font-size:0.88rem;">▶ Plot BER</button>
+          <div class="spinner" id="wl-ber-spin"></div>
+        </div>
+        <div class="error-msg" id="wl-ber-err"></div>
+        <div id="wl-ber-result" style="display:none;">
+          <img id="wl-ber-plot" src="" alt="BER curve" style="width:100%;border-radius:8px;border:1px solid #334155;">
+        </div>
+      </div>
     </div>
   </div>
 
@@ -488,6 +510,33 @@ async function runUpload() {
     const data = await res.json();
     if (data.error) { err.textContent = data.error; return; }
     showResult('up', data);
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+  }
+}
+
+async function runWaveLabBER() {
+  const btn  = document.getElementById('wl-ber-btn');
+  const spin = document.getElementById('wl-ber-spin');
+  const err  = document.getElementById('wl-ber-err');
+  err.textContent = '';
+  btn.disabled = true; spin.style.display = 'inline-block';
+  try {
+    const res = await fetch('/api/wavelab/ber', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mod:       document.getElementById('wl-mod').value,
+        n_symbols: document.getElementById('wl-ber-nsym').value,
+        trials:    document.getElementById('wl-trials').value,
+      })
+    });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+    document.getElementById('wl-ber-result').style.display = 'block';
+    setSrc('wl-ber-plot', data.plot);
   } catch(e) {
     err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
   } finally {

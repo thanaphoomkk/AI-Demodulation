@@ -460,6 +460,72 @@ def api_wavelab():
     })
 
 
+@app.route("/api/wavelab/ber", methods=["POST"])
+def api_wavelab_ber():
+    """คำนวณ BER curve โดย sweep SNR -2 ถึง 20 dB"""
+    data    = request.get_json()
+    mod     = data.get("mod", "bpsk").lower()
+    n_sym   = int(data.get("n_symbols", 128))
+    trials  = int(data.get("trials", 50))
+    sps     = 8
+
+    if mod not in DIGITAL_MODS:
+        return jsonify({"error": f"รองรับเฉพาะ {DIGITAL_MODS}"}), 400
+
+    from generate_signal import BITS_PER_SYMBOL, random_bits, DIGITAL_MAPPERS, upsample_and_shape, add_awgn
+    bps     = BITS_PER_SYMBOL[mod]
+    snr_pts = list(range(-2, 21, 2))   # -2, 0, 2, … 20 dB
+    ber_cl_list, ber_ai_list = [], []
+
+    rng = np.random.default_rng(42)
+    for snr in snr_pts:
+        err_cl = err_ai = total = 0
+        for _ in range(trials):
+            bits     = random_bits(n_sym * bps, rng)
+            symbols  = DIGITAL_MAPPERS[mod](bits)
+            clean    = upsample_and_shape(symbols, sps)
+            noisy    = add_awgn(clean, snr, rng)
+            src      = list(bits)
+
+            cl = demodulate(noisy, mod, sps=sps)
+            n  = min(len(src), len(cl))
+            err_cl += sum(a != b for a, b in zip(src[:n], cl[:n]))
+
+            ai = _ai_demodulate(noisy, mod, sps=sps)
+            if ai is None:
+                ai = cl
+            na = min(len(src), len(ai))
+            err_ai += sum(a != b for a, b in zip(src[:na], ai[:na]))
+            total  += n
+
+        ber_cl_list.append(err_cl / max(total, 1))
+        ber_ai_list.append(err_ai / max(total, 1))
+
+    # ── plot ──────────────────────────────────────────────────────────────
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig.patch.set_facecolor("#0f172a")
+    _style_ax(ax)
+
+    ax.semilogy(snr_pts, [max(b, 1e-5) for b in ber_cl_list],
+                color="#60a5fa", lw=2, marker="o", ms=5, label="Classical (MF)")
+    ax.semilogy(snr_pts, [max(b, 1e-5) for b in ber_ai_list],
+                color="#34d399", lw=2, marker="s", ms=5, ls="--", label="AI")
+
+    ax.set_xlabel("SNR (dB)"); ax.set_ylabel("BER")
+    ax.set_title(f"BER vs SNR — {mod.upper()}  ({trials} trials x {n_sym} symbols)")
+    ax.legend(facecolor="#0f172a", edgecolor="#334155", labelcolor="#e2e8f0")
+    ax.set_xlim(snr_pts[0] - 0.5, snr_pts[-1] + 0.5)
+    ax.grid(True, which="both", alpha=0.2, color="#334155")
+    fig.tight_layout()
+
+    return jsonify({
+        "plot":       _fig_to_b64(fig),
+        "snr":        snr_pts,
+        "ber_cl":     ber_cl_list,
+        "ber_ai":     ber_ai_list,
+    })
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, port=port, host="0.0.0.0")
