@@ -389,18 +389,8 @@
 
       <!-- BER Curve section -->
       <div style="border-top:1px solid #334155;margin-top:24px;padding-top:20px;">
-        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <span style="color:#93c5fd;font-weight:700;font-size:0.95rem;">📈 BER vs SNR Curve</span>
-          <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
-            <label style="white-space:nowrap;">Trials per SNR:</label>
-            <input type="number" id="wl-trials" value="50" min="10" max="500" style="width:80px;">
-          </div>
-          <div class="form-group" style="flex-direction:row;align-items:center;gap:8px;">
-            <label style="white-space:nowrap;">Symbols per trial:</label>
-            <input type="number" id="wl-ber-nsym" value="128" min="16" max="1024" style="width:90px;">
-          </div>
-          <button class="run-btn" id="wl-ber-btn" onclick="runWaveLabBER()"
-                  style="padding:8px 20px;font-size:0.88rem;">▶ Plot BER</button>
           <div class="spinner" id="wl-ber-spin"></div>
         </div>
         <div class="error-msg" id="wl-ber-err"></div>
@@ -517,33 +507,6 @@ async function runUpload() {
   }
 }
 
-async function runWaveLabBER() {
-  const btn  = document.getElementById('wl-ber-btn');
-  const spin = document.getElementById('wl-ber-spin');
-  const err  = document.getElementById('wl-ber-err');
-  err.textContent = '';
-  btn.disabled = true; spin.style.display = 'inline-block';
-  try {
-    const res = await fetch('/api/wavelab/ber', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        mod:       document.getElementById('wl-mod').value,
-        n_symbols: document.getElementById('wl-ber-nsym').value,
-        trials:    document.getElementById('wl-trials').value,
-      })
-    });
-    const data = await res.json();
-    if (data.error) { err.textContent = data.error; return; }
-    document.getElementById('wl-ber-result').style.display = 'block';
-    setSrc('wl-ber-plot', data.plot);
-  } catch(e) {
-    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
-  } finally {
-    btn.disabled = false; spin.style.display = 'none';
-  }
-}
-
 async function runWaveLab() {
   const btn  = document.getElementById('wl-btn');
   const spin = document.getElementById('wl-spin');
@@ -592,6 +555,30 @@ async function runWaveLab() {
     setSrc('wl-plot-clean',  data.plots.clean);
     setSrc('wl-plot-noisy',  data.plots.noisy);
     setSrc('wl-plot-result', data.plots.result);
+
+    // BER curve — ยิง request ต่อทันที (ไม่บล็อก UI)
+    const berSpin = document.getElementById('wl-ber-spin');
+    const berErr  = document.getElementById('wl-ber-err');
+    berSpin.style.display = 'inline-block';
+    berErr.textContent = '';
+    fetch('/api/wavelab/ber', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mod:       document.getElementById('wl-mod').value,
+        n_symbols: 128,
+        trials:    50,
+      })
+    }).then(r => r.json()).then(d => {
+      if (d.error) { berErr.textContent = d.error; return; }
+      document.getElementById('wl-ber-result').style.display = 'block';
+      setSrc('wl-ber-plot', d.plot);
+    }).catch(e => {
+      berErr.textContent = 'BER error: ' + e;
+    }).finally(() => {
+      berSpin.style.display = 'none';
+    });
+
   } catch(e) {
     err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
   } finally {
