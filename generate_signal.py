@@ -26,11 +26,11 @@ import numpy as np
 
 # จำนวนบิตต่อสัญลักษณ์ของแต่ละ modulation แบบดิจิทัล
 BITS_PER_SYMBOL = {
-    "bpsk":   1,
-    "qpsk":   2,
-    "qam16":  4,
-    "qam64":  6,
-    "qam256": 8,
+    "bpsk":  1,
+    "qpsk":  2,
+    "qam8":  3,
+    "qam16": 4,
+    "qam64": 6,
 }
 
 DIGITAL_MODS = list(BITS_PER_SYMBOL.keys())
@@ -99,20 +99,29 @@ def _qam_map(bits: np.ndarray, bps: int) -> np.ndarray:
     return ((i_vals + 1j * q_vals) / norm).astype(np.complex64)
 
 
+def qam8_map(bits: np.ndarray) -> np.ndarray:
+    """Cross-8QAM, 3 บิต/สัญลักษณ์ — ใช้ตารางเดียวกับ demod_classical"""
+    from demod_classical import QAM8_CONST, QAM8_BITS
+    # สร้าง LUT: bin(b2b1b0) -> symbol
+    lut = np.zeros(8, dtype=np.complex64)
+    for sym_idx, brow in enumerate(QAM8_BITS):
+        bin_val = brow[0]*4 + brow[1]*2 + brow[2]
+        lut[bin_val] = QAM8_CONST[sym_idx]
+    b = bits.reshape(-1, 3)
+    idx = (b[:, 0]*4 + b[:, 1]*2 + b[:, 2]).astype(int)
+    return lut[idx]
+
+
 def qam64_map(bits: np.ndarray) -> np.ndarray:
     return _qam_map(bits, 6)
 
 
-def qam256_map(bits: np.ndarray) -> np.ndarray:
-    return _qam_map(bits, 8)
-
-
 DIGITAL_MAPPERS = {
-    "bpsk":   bpsk_map,
-    "qpsk":   qpsk_map,
-    "qam16":  qam16_map,
-    "qam64":  qam64_map,
-    "qam256": qam256_map,
+    "bpsk":  bpsk_map,
+    "qpsk":  qpsk_map,
+    "qam8":  qam8_map,
+    "qam16": qam16_map,
+    "qam64": qam64_map,
 }
 
 

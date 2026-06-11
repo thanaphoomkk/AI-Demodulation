@@ -43,19 +43,37 @@ def _build_square_qam(bits_per_axis: int):
     return np.array(const, dtype=np.complex128), bit_table
 
 
-# ---------- 16-QAM (Gray) ----------
-QAM16_CONST, QAM16_BITS   = _build_square_qam(2)   # 2 บิต/แกน -> 4 บิต/symbol
-# ---------- 64-QAM (Gray) ----------
-QAM64_CONST, QAM64_BITS   = _build_square_qam(3)   # 3 บิต/แกน -> 6 บิต/symbol
-# ---------- 256-QAM (Gray) ----------
-QAM256_CONST, QAM256_BITS = _build_square_qam(4)   # 4 บิต/แกน -> 8 บิต/symbol
+# ---------- 8-QAM (Cross pattern) ----------
+# ตาราง hardcoded: symbol index -> (I, Q, [b2, b1, b0])
+# จุด 8 จุด ถูก assign บิตแบบ Gray-like เพื่อให้เพื่อนบ้านต่างกัน 1 บิต
+_QAM8_TABLE = [
+    # I,    Q,    bits
+    (-1.0, -1.0, [0, 0, 0]),
+    (-1.0, +1.0, [0, 0, 1]),
+    (+1.0, -1.0, [0, 1, 0]),
+    (+1.0, +1.0, [0, 1, 1]),
+    (-3.0, +0.0, [1, 0, 0]),
+    (+3.0, +0.0, [1, 0, 1]),
+    (+0.0, -3.0, [1, 1, 0]),
+    (+0.0, +3.0, [1, 1, 1]),
+]
 
+def _build_cross_qam8():
+    raw = np.array([complex(r[0], r[1]) for r in _QAM8_TABLE], dtype=np.complex128)
+    norm = np.sqrt(np.mean(np.abs(raw) ** 2))
+    return raw / norm, [r[2] for r in _QAM8_TABLE]
+
+QAM8_CONST, QAM8_BITS = _build_cross_qam8()
+# ---------- 16-QAM (Gray) ----------
+QAM16_CONST, QAM16_BITS  = _build_square_qam(2)
+# ---------- 64-QAM (Gray) ----------
+QAM64_CONST, QAM64_BITS  = _build_square_qam(3)
 CONSTELLATIONS = {
-    "bpsk":   (BPSK_CONST,   BPSK_BITS),
-    "qpsk":   (QPSK_CONST,   QPSK_BITS),
-    "qam16":  (QAM16_CONST,  QAM16_BITS),
-    "qam64":  (QAM64_CONST,  QAM64_BITS),
-    "qam256": (QAM256_CONST, QAM256_BITS),
+    "bpsk":  (BPSK_CONST,  BPSK_BITS),
+    "qpsk":  (QPSK_CONST,  QPSK_BITS),
+    "qam8":  (QAM8_CONST,  QAM8_BITS),
+    "qam16": (QAM16_CONST, QAM16_BITS),
+    "qam64": (QAM64_CONST, QAM64_BITS),
 }
 
 
