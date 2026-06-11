@@ -127,6 +127,7 @@
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('gen')">สร้างสัญญาณจำลอง</button>
     <button class="tab-btn" onclick="switchTab('upload')">อัปโหลดไฟล์ IQ</button>
+    <button class="tab-btn" onclick="switchTab('wavelab')">🔬 Waveform Lab</button>
   </div>
 
   <!-- Tab: Generate -->
@@ -290,11 +291,86 @@
     </div>
   </div>
 
+  <!-- Tab: Waveform Lab -->
+  <div id="tab-wavelab" class="tab-panel">
+    <div class="card">
+      <h2>🔬 Waveform Lab — สัญญาณจริง + Noise + AI Demod</h2>
+      <p style="color:#94a3b8;font-size:0.85rem;margin-bottom:16px;">
+        สุ่มบิต → สร้างสัญญาณ sin/cos → เพิ่ม AWGN → ส่งเข้า AI (CNN+LSTM) ทำ Matched Filter → แสดงผล 3 panel
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Modulation</label>
+          <select id="wl-mod">
+            {% for m in digital_mods %}
+            <option value="{{ m }}">{{ m.upper() }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>จำนวนสัญลักษณ์</label>
+          <input type="number" id="wl-nsym" value="16" min="4" max="64" style="width:90px">
+        </div>
+        <div class="form-group">
+          <label>SNR: <span class="snr-label" id="wl-snr-val">10 dB</span></label>
+          <input type="range" id="wl-snr" min="-5" max="25" value="10"
+                 oninput="document.getElementById('wl-snr-val').textContent=this.value+' dB'">
+        </div>
+        <div class="form-group">
+          <label>Carrier fc: <span class="snr-label" id="wl-fc-val">0.10</span></label>
+          <input type="range" id="wl-fc" min="1" max="45" value="10"
+                 oninput="document.getElementById('wl-fc-val').textContent=(this.value/100).toFixed(2)">
+        </div>
+        <div class="form-group">
+          <button class="run-btn" id="wl-btn" onclick="runWaveLab()">▶ Run</button>
+          <div class="spinner" id="wl-spin"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="wl-err"></div>
+    </div>
+
+    <div class="card result-card" id="wl-result">
+      <h2>ผลลัพธ์ Waveform Lab</h2>
+      <div id="wl-badge" class="method-badge"></div>
+
+      <div class="stats" style="margin-bottom:20px;">
+        <div class="stat-box">
+          <div class="val" id="wl-total">—</div>
+          <div class="lbl">จำนวนบิต</div>
+        </div>
+        <div class="stat-box ber">
+          <div class="val" id="wl-ber-ai">—</div>
+          <div class="lbl">BER (AI)</div>
+        </div>
+        <div class="stat-box ber">
+          <div class="val" id="wl-ber-cl">—</div>
+          <div class="lbl">BER (Classical)</div>
+        </div>
+      </div>
+
+      <!-- 3 panel plots แนวตั้ง -->
+      <div class="plots">
+        <div>
+          <div style="color:#f59e0b;font-size:0.82rem;font-weight:700;margin-bottom:6px;">① บิตต้นทาง + สัญญาณ Clean</div>
+          <img id="wl-plot-clean" src="" alt="clean signal">
+        </div>
+        <div>
+          <div style="color:#f87171;font-size:0.82rem;font-weight:700;margin-bottom:6px;">② สัญญาณหลังเพิ่ม Noise (AWGN)</div>
+          <img id="wl-plot-noisy" src="" alt="noisy signal">
+        </div>
+        <div>
+          <div style="color:#34d399;font-size:0.82rem;font-weight:700;margin-bottom:6px;">③ ผลลัพธ์ AI vs Classical — ถูก/ผิดแต่ละบิต</div>
+          <img id="wl-plot-result" src="" alt="decode result">
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 function switchTab(t) {
-  const tabs = ['gen','upload'];
+  const tabs = ['gen','upload','wavelab'];
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
     b.classList.toggle('active', tabs[i] === t));
   tabs.forEach(id =>
@@ -396,6 +472,40 @@ async function runUpload() {
   }
 }
 
+async function runWaveLab() {
+  const btn  = document.getElementById('wl-btn');
+  const spin = document.getElementById('wl-spin');
+  const err  = document.getElementById('wl-err');
+  err.textContent = '';
+  btn.disabled = true; spin.style.display = 'inline-block';
+  try {
+    const res = await fetch('/api/wavelab', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        mod:       document.getElementById('wl-mod').value,
+        n_symbols: document.getElementById('wl-nsym').value,
+        snr:       document.getElementById('wl-snr').value,
+        fc:        document.getElementById('wl-fc').value / 100,
+      })
+    });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+
+    document.getElementById('wl-result').style.display = 'block';
+    setBadge('wl-badge', data.method);
+    setEl('wl-total',  data.total_bits.toLocaleString());
+    if (data.ber_ai  != null) setEl('wl-ber-ai', data.ber_ai.toFixed(4));
+    if (data.ber_cl  != null) setEl('wl-ber-cl', data.ber_cl.toFixed(4));
+    setSrc('wl-plot-clean',  data.plots.clean);
+    setSrc('wl-plot-noisy',  data.plots.noisy);
+    setSrc('wl-plot-result', data.plots.result);
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+  }
+}
 </script>
 </body>
 </html>
