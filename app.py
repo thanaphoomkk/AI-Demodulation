@@ -289,8 +289,9 @@ def _wavelab_plots(clean_iq: np.ndarray, noisy_iq: np.ndarray,
                    src_bits: list[int], ai_bits: list[int], classical_bits: list[int],
                    mod: str, fc: float, sps: int) -> dict:
     """สร้าง 3 กราฟสำหรับ Waveform Lab"""
-    bps   = len(src_bits) // (len(clean_iq) // sps)  # bits per symbol
-    n_sym = min(len(src_bits) // bps, 16)             # แสดงไม่เกิน 16 symbol
+    from generate_signal import BITS_PER_SYMBOL
+    bps   = BITS_PER_SYMBOL[mod]
+    n_sym = max(1, len(src_bits) // bps)
     n_samp = n_sym * sps
     t = np.arange(n_samp)
 
