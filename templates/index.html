@@ -348,6 +348,29 @@
         </div>
       </div>
 
+      <!-- บิตเปรียบเทียบ -->
+      <div style="margin-bottom:20px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+          <div>
+            <div style="color:#f59e0b;font-size:0.78rem;font-weight:700;margin-bottom:4px;">📤 Source bits</div>
+            <div class="bit-output" id="wl-bits-src" style="color:#fbbf24;border-color:#92400e;font-size:0.8rem;"></div>
+          </div>
+          <div>
+            <div style="color:#34d399;font-size:0.78rem;font-weight:700;margin-bottom:4px;">🤖 AI decoded</div>
+            <div class="bit-output" id="wl-bits-ai" style="font-size:0.8rem;"></div>
+          </div>
+          <div>
+            <div style="color:#60a5fa;font-size:0.78rem;font-weight:700;margin-bottom:4px;">📐 Classical decoded</div>
+            <div class="bit-output" id="wl-bits-cl" style="color:#93c5fd;border-color:#1e40af;font-size:0.8rem;"></div>
+          </div>
+        </div>
+        <!-- diff highlight row -->
+        <div style="margin-top:8px;">
+          <div style="color:#94a3b8;font-size:0.75rem;font-weight:600;margin-bottom:4px;">🔍 Diff (AI vs Source) — <span style="color:#34d399">●</span> ถูก &nbsp;<span style="color:#f87171">●</span> ผิด</div>
+          <div id="wl-bits-diff" style="font-family:'Courier New',monospace;font-size:0.85rem;line-height:1.8;word-break:break-all;padding:8px 12px;background:#020617;border:1px solid #334155;border-radius:6px;"></div>
+        </div>
+      </div>
+
       <!-- 3 panel plots แนวตั้ง -->
       <div class="plots">
         <div>
@@ -497,6 +520,26 @@ async function runWaveLab() {
     setEl('wl-total',  data.total_bits.toLocaleString());
     if (data.ber_ai  != null) setEl('wl-ber-ai', data.ber_ai.toFixed(4));
     if (data.ber_cl  != null) setEl('wl-ber-cl', data.ber_cl.toFixed(4));
+
+    // แสดง bits
+    setEl('wl-bits-src', data.bits_source || '');
+    setEl('wl-bits-ai',  data.bits_ai     || '');
+    setEl('wl-bits-cl',  data.bits_classical || '');
+
+    // diff highlight: เทียบ AI vs Source ทีละบิต
+    const src = data.bits_source || '';
+    const ai  = data.bits_ai     || '';
+    const diffEl = document.getElementById('wl-bits-diff');
+    diffEl.innerHTML = '';
+    for (let i = 0; i < src.length; i++) {
+      const span = document.createElement('span');
+      span.textContent = ai[i] ?? '?';
+      span.style.cssText = ai[i] === src[i]
+        ? 'color:#34d399;margin:0 1px;'
+        : 'color:#f87171;font-weight:bold;text-decoration:underline;margin:0 1px;';
+      diffEl.appendChild(span);
+    }
+
     setSrc('wl-plot-clean',  data.plots.clean);
     setSrc('wl-plot-noisy',  data.plots.noisy);
     setSrc('wl-plot-result', data.plots.result);

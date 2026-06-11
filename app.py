@@ -448,11 +448,14 @@ def api_wavelab():
     plots = _wavelab_plots(clean_iq, noisy_iq, src, ai_decoded, classical, mod, fc, sps)
 
     return jsonify({
-        "method":     method,
-        "total_bits": len(src),
-        "ber_ai":     round(ber_ai, 4),
-        "ber_cl":     round(ber_cl, 4),
-        "plots":      plots,
+        "method":           method,
+        "total_bits":       len(src),
+        "ber_ai":           round(ber_ai, 4),
+        "ber_cl":           round(ber_cl, 4),
+        "bits_source":      "".join(str(b) for b in src),
+        "bits_ai":          "".join(str(b) for b in ai_decoded[:len(src)]),
+        "bits_classical":   "".join(str(b) for b in classical[:len(src)]),
+        "plots":            plots,
     })
 
 
