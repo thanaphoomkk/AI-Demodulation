@@ -52,14 +52,33 @@ def _ai_demodulate(iq: np.ndarray, mod: str, sps: int = 8) -> list[int] | None:
     iq_real = iq.real.astype(np.float32)
     iq_imag = iq.imag.astype(np.float32)
 
+    # pad ถ้าสัญญาณสั้นกว่า input_len
+    if len(iq) < input_len:
+        pad = input_len - len(iq)
+        iq_real = np.pad(iq_real, (0, pad))
+        iq_imag = np.pad(iq_imag, (0, pad))
+
+    n_symbols_per_chunk = input_len // sps
+    bits_per_symbol = model.output_shape[-1]
+    n_actual_symbols = len(iq) // sps
+
     bits_out: list[int] = []
     i = 0
-    while i + input_len <= len(iq):
+    while i + input_len <= len(iq_real):
         chunk = np.stack([iq_real[i:i + input_len],
                           iq_imag[i:i + input_len]], axis=-1)[np.newaxis]
         pred = model.predict(chunk, verbose=0)   # (1, T, bps)
         bits_out.extend((pred[0] > 0.5).astype(int).flatten().tolist())
         i += input_len
+
+    # กรณี pad: ถ้ายังไม่ได้ decode เลย (สัญญาณสั้นมาก) ให้ decode chunk เดียว
+    if not bits_out:
+        chunk = np.stack([iq_real[:input_len],
+                          iq_imag[:input_len]], axis=-1)[np.newaxis]
+        pred = model.predict(chunk, verbose=0)
+        # ตัดเฉพาะบิตที่ตรงกับ symbol จริง
+        bits_out = (pred[0] > 0.5).astype(int).flatten().tolist()
+        bits_out = bits_out[:n_actual_symbols * bits_per_symbol]
 
     return bits_out if bits_out else None
 
