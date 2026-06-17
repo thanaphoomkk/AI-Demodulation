@@ -545,6 +545,123 @@ def api_wavelab_ber():
     })
 
 
+@app.route("/api/compare/realtime", methods=["POST"])
+def api_compare_realtime():
+    """Real-time BER ณ SNR เดียว สำหรับทุก modulation"""
+    data   = request.get_json()
+    snr    = float(data.get("snr", 10))
+    n_sym  = int(data.get("n_symbols", 128))
+    trials = int(data.get("trials", 20))
+    sps    = 8
+
+    from generate_signal import BITS_PER_SYMBOL, random_bits, DIGITAL_MAPPERS, upsample_and_shape, add_awgn
+    rng = np.random.default_rng()
+    results = {}
+
+    for mod in DIGITAL_MODS:
+        bps = BITS_PER_SYMBOL[mod]
+        err_cl = err_ai = total = 0
+        for _ in range(trials):
+            bits    = random_bits(n_sym * bps, rng)
+            symbols = DIGITAL_MAPPERS[mod](bits)
+            clean   = upsample_and_shape(symbols, sps)
+            noisy   = add_awgn(clean, snr, rng)
+            src     = list(bits)
+
+            cl = demodulate(noisy, mod, sps=sps)
+            n  = min(len(src), len(cl))
+            err_cl += sum(a != b for a, b in zip(src[:n], cl[:n]))
+
+            ai = _ai_demodulate(noisy, mod, sps=sps)
+            if ai is None:
+                ai = cl
+            na = min(len(src), len(ai))
+            err_ai += sum(a != b for a, b in zip(src[:na], ai[:na]))
+            total  += n
+
+        ber_cl = err_cl / max(total, 1)
+        ber_ai = err_ai / max(total, 1)
+        results[mod] = {
+            "ber_ai":  round(ber_ai, 4),
+            "ber_cl":  round(ber_cl, 4),
+            "acc_ai":  round((1 - ber_ai) * 100, 2),
+            "acc_cl":  round((1 - ber_cl) * 100, 2),
+        }
+
+    return jsonify({"snr": snr, "results": results})
+
+
+@app.route("/api/compare/ber_all", methods=["POST"])
+def api_compare_ber_all():
+    """BER vs SNR ของทุก modulation — AI vs Classical"""
+    data   = request.get_json()
+    n_sym  = int(data.get("n_symbols", 128))
+    trials = int(data.get("trials", 30))
+    sps    = 8
+
+    from generate_signal import BITS_PER_SYMBOL, random_bits, DIGITAL_MAPPERS, upsample_and_shape, add_awgn
+    rng     = np.random.default_rng(42)
+    snr_pts = list(range(-2, 21, 2))
+    all_results = {}
+
+    for mod in DIGITAL_MODS:
+        bps = BITS_PER_SYMBOL[mod]
+        ber_cl_list, ber_ai_list = [], []
+        for snr in snr_pts:
+            err_cl = err_ai = total = 0
+            for _ in range(trials):
+                bits    = random_bits(n_sym * bps, rng)
+                symbols = DIGITAL_MAPPERS[mod](bits)
+                clean   = upsample_and_shape(symbols, sps)
+                noisy   = add_awgn(clean, snr, rng)
+                src     = list(bits)
+
+                cl = demodulate(noisy, mod, sps=sps)
+                n  = min(len(src), len(cl))
+                err_cl += sum(a != b for a, b in zip(src[:n], cl[:n]))
+
+                ai = _ai_demodulate(noisy, mod, sps=sps)
+                if ai is None:
+                    ai = cl
+                na = min(len(src), len(ai))
+                err_ai += sum(a != b for a, b in zip(src[:na], ai[:na]))
+                total  += n
+
+            ber_cl_list.append(err_cl / max(total, 1))
+            ber_ai_list.append(err_ai / max(total, 1))
+
+        all_results[mod] = {"ber_cl": ber_cl_list, "ber_ai": ber_ai_list}
+
+    # ── plot: subplot แต่ละ mod ──────────────────────────────────────────────
+    n_mods = len(DIGITAL_MODS)
+    fig, axes = plt.subplots(1, n_mods, figsize=(4 * n_mods, 4.5))
+    fig.patch.set_facecolor("#0f172a")
+    MOD_COLORS = {"bpsk": "#60a5fa", "qpsk": "#34d399",
+                  "qam8": "#f59e0b", "qam16": "#a78bfa", "qam64": "#f87171"}
+
+    for ax, mod in zip(axes, DIGITAL_MODS):
+        _style_ax(ax)
+        r = all_results[mod]
+        c = MOD_COLORS.get(mod, "#94a3b8")
+        ax.semilogy(snr_pts, [max(b, 1e-5) for b in r["ber_cl"]],
+                    color=c, lw=2, marker="o", ms=4, ls="-", label="Classical")
+        ax.semilogy(snr_pts, [max(b, 1e-5) for b in r["ber_ai"]],
+                    color=c, lw=2, marker="s", ms=4, ls="--", alpha=0.7, label="AI")
+        ax.set_title(mod.upper(), fontsize=11, color="#93c5fd")
+        ax.set_xlabel("SNR (dB)")
+        ax.set_ylabel("BER")
+        ax.legend(facecolor="#0f172a", edgecolor="#334155",
+                  labelcolor="#e2e8f0", fontsize=8)
+        ax.grid(True, which="both", alpha=0.2, color="#334155")
+
+    fig.suptitle("BER vs SNR — AI (--) vs Classical (─)  ทุก Modulation",
+                 color="#93c5fd", fontsize=12)
+    fig.tight_layout()
+    plot_b64 = _fig_to_b64(fig)
+
+    return jsonify({"plot": plot_b64, "snr": snr_pts, "results": all_results})
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, port=port, host="0.0.0.0")

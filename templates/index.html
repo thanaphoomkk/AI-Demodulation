@@ -128,6 +128,7 @@
     <button class="tab-btn active" onclick="switchTab('gen')">สร้างสัญญาณจำลอง</button>
     <button class="tab-btn" onclick="switchTab('upload')">อัปโหลดไฟล์ IQ</button>
     <button class="tab-btn" onclick="switchTab('wavelab')">🔬 Waveform Lab</button>
+    <button class="tab-btn" onclick="switchTab('compare')">📊 Comparison</button>
   </div>
 
   <!-- Tab: Generate -->
@@ -401,11 +402,71 @@
     </div>
   </div>
 
+  <!-- Tab: Comparison -->
+  <div id="tab-compare" class="tab-panel">
+
+    <!-- ── Real-time BER ── -->
+    <div class="card">
+      <h2>⚡ Real-time BER — ปรับ SNR แล้วดูผลทันที</h2>
+      <div class="form-row" style="align-items:center;">
+        <div class="form-group">
+          <label>SNR: <span class="snr-label" id="cmp-snr-val">10 dB</span></label>
+          <input type="range" id="cmp-snr" min="-5" max="25" value="10"
+                 oninput="document.getElementById('cmp-snr-val').textContent=this.value+' dB'">
+        </div>
+        <div class="form-group">
+          <button class="run-btn" id="cmp-rt-btn" onclick="runCompareRealtime()">▶ Run</button>
+          <div class="spinner" id="cmp-rt-spin"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="cmp-rt-err"></div>
+
+      <div id="cmp-rt-result" style="display:none;margin-top:16px;">
+        <div style="color:#94a3b8;font-size:0.8rem;margin-bottom:10px;">
+          ── (สีเขียว) AI ดีกว่า &nbsp;│&nbsp; ── (สีแดง) Classical ดีกว่า &nbsp;│&nbsp; ─── เท่ากัน
+        </div>
+        <table id="cmp-rt-table" style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+          <thead>
+            <tr style="color:#60a5fa;border-bottom:1px solid #334155;">
+              <th style="text-align:left;padding:8px;">Modulation</th>
+              <th style="padding:8px;">BER (AI)</th>
+              <th style="padding:8px;">BER (Classical)</th>
+              <th style="padding:8px;">Accuracy AI</th>
+              <th style="padding:8px;">Accuracy Classical</th>
+              <th style="padding:8px;">ผลลัพธ์</th>
+            </tr>
+          </thead>
+          <tbody id="cmp-rt-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── BER vs SNR ทุก Mod ── -->
+    <div class="card">
+      <h2>📈 BER vs SNR — AI vs Classical ทุก Modulation</h2>
+      <p style="color:#94a3b8;font-size:0.82rem;margin-bottom:14px;">
+        เปรียบเทียบกราฟ BER curve ของทุก modulation พร้อมกัน — เส้นทึบ = Classical, เส้นประ = AI
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <button class="run-btn" id="cmp-ber-btn" onclick="runCompareAll()">▶ คำนวณ BER ทุก Mod</button>
+          <div class="spinner" id="cmp-ber-spin"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="cmp-ber-err"></div>
+      <div id="cmp-ber-result" style="display:none;margin-top:16px;">
+        <img id="cmp-ber-plot" src="" alt="BER all mods"
+             style="width:100%;border-radius:8px;border:1px solid #334155;">
+      </div>
+    </div>
+
+  </div>
+
 </div>
 
 <script>
 function switchTab(t) {
-  const tabs = ['gen','upload','wavelab'];
+  const tabs = ['gen','upload','wavelab','compare'];
   document.querySelectorAll('.tab-btn').forEach((b,i) =>
     b.classList.toggle('active', tabs[i] === t));
   tabs.forEach(id =>
@@ -583,6 +644,84 @@ async function runWaveLab() {
     err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
   } finally {
     btn.disabled = false; spin.style.display = 'none';
+  }
+}
+
+async function runCompareRealtime() {
+  const btn  = document.getElementById('cmp-rt-btn');
+  const spin = document.getElementById('cmp-rt-spin');
+  const err  = document.getElementById('cmp-rt-err');
+  err.textContent = '';
+  btn.disabled = true; spin.style.display = 'inline-block';
+  try {
+    const res  = await fetch('/api/compare/realtime', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        snr:       document.getElementById('cmp-snr').value,
+        n_symbols: 128,
+        trials:    20,
+      })
+    });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+
+    const tbody = document.getElementById('cmp-rt-tbody');
+    tbody.innerHTML = '';
+    const mods = ['bpsk','qpsk','qam8','qam16','qam64'];
+    for (const mod of mods) {
+      const r = data.results[mod];
+      if (!r) continue;
+      const aiWin = r.ber_ai < r.ber_cl - 0.001;
+      const clWin = r.ber_cl < r.ber_ai - 0.001;
+      const verdict = aiWin
+        ? '<span style="color:#34d399;font-weight:700;">🤖 AI ดีกว่า</span>'
+        : clWin
+          ? '<span style="color:#f87171;font-weight:700;">📐 Classical ดีกว่า</span>'
+          : '<span style="color:#94a3b8;">≈ เท่ากัน</span>';
+
+      const berAiCol = aiWin ? '#34d399' : clWin ? '#f87171' : '#94a3b8';
+      const berClCol = clWin ? '#34d399' : aiWin ? '#f87171' : '#94a3b8';
+
+      tbody.innerHTML += `<tr style="border-bottom:1px solid #1e293b;">
+        <td style="padding:8px;font-weight:700;color:#93c5fd;">${mod.toUpperCase()}</td>
+        <td style="padding:8px;text-align:center;color:${berAiCol};font-weight:700;">${r.ber_ai.toFixed(4)}</td>
+        <td style="padding:8px;text-align:center;color:${berClCol};font-weight:700;">${r.ber_cl.toFixed(4)}</td>
+        <td style="padding:8px;text-align:center;color:#34d399;">${r.acc_ai.toFixed(2)}%</td>
+        <td style="padding:8px;text-align:center;color:#60a5fa;">${r.acc_cl.toFixed(2)}%</td>
+        <td style="padding:8px;text-align:center;">${verdict}</td>
+      </tr>`;
+    }
+    document.getElementById('cmp-rt-result').style.display = 'block';
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+  }
+}
+
+async function runCompareAll() {
+  const btn  = document.getElementById('cmp-ber-btn');
+  const spin = document.getElementById('cmp-ber-spin');
+  const err  = document.getElementById('cmp-ber-err');
+  err.textContent = '';
+  btn.disabled = true; spin.style.display = 'inline-block';
+  btn.textContent = '⏳ กำลังคำนวณ...';
+  try {
+    const res  = await fetch('/api/compare/ber_all', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ n_symbols: 128, trials: 30 })
+    });
+    const data = await res.json();
+    if (data.error) { err.textContent = data.error; return; }
+    document.getElementById('cmp-ber-plot').src = 'data:image/png;base64,' + data.plot;
+    document.getElementById('cmp-ber-result').style.display = 'block';
+  } catch(e) {
+    err.textContent = 'เชื่อมต่อ server ไม่ได้: ' + e;
+  } finally {
+    btn.disabled = false; spin.style.display = 'none';
+    btn.textContent = '▶ คำนวณ BER ทุก Mod';
   }
 }
 </script>
