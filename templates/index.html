@@ -118,7 +118,7 @@
 <header>
   <div>
     <h1>📡 AI Demodulation</h1>
-    <span>ถอดรหัสสัญญาณ BPSK / QPSK / QAM → บิต 0/1 ด้วย AI และ Classical</span>
+    <span>ถอดรหัสสัญญาณ BPSK / QAM4 / QAM8 / QAM16 → บิต 0/1 ด้วย AI และ Classical</span>
   </div>
 </header>
 
@@ -668,7 +668,7 @@ async function runCompareRealtime() {
 
     const tbody = document.getElementById('cmp-rt-tbody');
     tbody.innerHTML = '';
-    const mods = ['bpsk','qpsk','qam8','qam16','qam64'];
+    const mods = ['bpsk','qam4','qam8','qam16'];
     for (const mod of mods) {
       const r = data.results[mod];
       if (!r) continue;

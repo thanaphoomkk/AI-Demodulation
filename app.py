@@ -25,11 +25,13 @@ app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB
 
 _model_cache: dict = {}
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def _load_ai_model(mod: str):
     """โหลดโมเดล AI จากไฟล์ .keras (cache ไว้ในหน่วยความจำ)"""
     if mod in _model_cache:
         return _model_cache[mod]
-    path = os.path.join("models", f"{mod}_demod.keras")
+    path = os.path.join(_BASE_DIR, "models", f"{mod}_demod.keras")
     if not os.path.exists(path):
         return None
     try:
@@ -37,7 +39,8 @@ def _load_ai_model(mod: str):
         model = tf.keras.models.load_model(path)
         _model_cache[mod] = model
         return model
-    except Exception:
+    except Exception as e:
+        print(f"[AI load error] {mod}: {e}")
         return None
 
 
@@ -207,6 +210,31 @@ def _ber(src: list[int], dec: list[int]) -> float:
 
 # ------------------------------------------------------------------ routes --
 
+@app.route("/api/debug/models")
+def api_debug_models():
+    """ตรวจสอบว่าโมเดลอยู่ที่ไหน และโหลดได้ไหม"""
+    import glob
+    models_dir = os.path.join(_BASE_DIR, "models")
+    found = glob.glob(os.path.join(models_dir, "*.keras"))
+    results = {}
+    for mod in DIGITAL_MODS:
+        path = os.path.join(models_dir, f"{mod}_demod.keras")
+        exists = os.path.exists(path)
+        err = None
+        if exists:
+            try:
+                import tensorflow as tf
+                tf.keras.models.load_model(path)
+                status = "ok"
+            except Exception as e:
+                status = "error"
+                err = str(e)
+        else:
+            status = "not found"
+        results[mod] = {"path": path, "exists": exists, "status": status, "error": err}
+    return jsonify({"base_dir": _BASE_DIR, "models_dir": models_dir,
+                    "keras_files": found, "results": results})
+
 @app.route("/")
 def index():
     return render_template("index.html", mods=ALL_MODS, digital_mods=DIGITAL_MODS)
@@ -215,7 +243,7 @@ def index():
 @app.route("/api/generate", methods=["POST"])
 def api_generate():
     data  = request.get_json()
-    mod   = data.get("mod", "qpsk").lower()
+    mod   = data.get("mod", "qam4").lower()
     snr   = float(data.get("snr", 10))
     n_sym = int(data.get("n_symbols", 64))
     fc    = float(data.get("fc", 0.1))
@@ -265,7 +293,7 @@ def api_generate():
 
 @app.route("/api/upload", methods=["POST"])
 def api_upload():
-    mod = request.form.get("mod", "qpsk").lower()
+    mod = request.form.get("mod", "qam4").lower()
     sps = int(request.form.get("sps", 1))
     f   = request.files.get("file")
 
@@ -636,8 +664,8 @@ def api_compare_ber_all():
     n_mods = len(DIGITAL_MODS)
     fig, axes = plt.subplots(1, n_mods, figsize=(4 * n_mods, 4.5))
     fig.patch.set_facecolor("#0f172a")
-    MOD_COLORS = {"bpsk": "#60a5fa", "qpsk": "#34d399",
-                  "qam8": "#f59e0b", "qam16": "#a78bfa", "qam64": "#f87171"}
+    MOD_COLORS = {"bpsk": "#60a5fa", "qam4": "#34d399",
+                  "qam8": "#f59e0b", "qam16": "#a78bfa"}
 
     for ax, mod in zip(axes, DIGITAL_MODS):
         _style_ax(ax)

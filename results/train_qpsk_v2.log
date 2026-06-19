@@ -1,0 +1,74 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781207823.379632   10800 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781207825.748235   10800 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1781207828.345656   10800 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+============================================================
+ เทรน Demodulator: QPSK (2 บิต/สัญลักษณ์)
+============================================================
+กำลังสร้างชุดข้อมูล train/val ...
+  X_train=(5000, 512, 2), y_train=(5000, 64, 2)
+  X_val  =(1000, 512, 2), y_val  =(1000, 64, 2)
+Model: "CNN_LSTM_Demodulator"
+┌─────────────────────────────────┬────────────────────────┬───────────────┐
+│ Layer (type)                    │ Output Shape           │       Param # │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ iq_input (InputLayer)           │ (None, 512, 2)         │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d (Conv1D)                 │ (None, 512, 64)        │           704 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization             │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d_1 (Conv1D)               │ (None, 512, 64)        │        20,544 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization_1           │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ reshape (Reshape)               │ (None, 64, 512)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional (Bidirectional)   │ (None, 64, 256)        │       656,384 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 64, 256)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ time_distributed                │ (None, 64, 64)         │        16,448 │
+│ (TimeDistributed)               │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bit_output (TimeDistributed)    │ (None, 64, 2)          │           130 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 694,722 (2.65 MB)
+ Trainable params: 694,466 (2.65 MB)
+ Non-trainable params: 256 (1.00 KB)
+Epoch 1/30
+79/79 - 27s - 342ms/step - binary_accuracy: 0.9818 - loss: 0.0541 - val_binary_accuracy: 0.9869 - val_loss: 0.1682 - learning_rate: 0.0010
+Epoch 2/30
+79/79 - 16s - 199ms/step - binary_accuracy: 0.9956 - loss: 0.0126 - val_binary_accuracy: 0.9538 - val_loss: 0.1863 - learning_rate: 0.0010
+Epoch 3/30
+79/79 - 20s - 250ms/step - binary_accuracy: 0.9961 - loss: 0.0111 - val_binary_accuracy: 0.9816 - val_loss: 0.0982 - learning_rate: 0.0010
+Epoch 4/30
+79/79 - 19s - 244ms/step - binary_accuracy: 0.9964 - loss: 0.0101 - val_binary_accuracy: 0.9903 - val_loss: 0.0392 - learning_rate: 0.0010
+Epoch 5/30
+79/79 - 19s - 242ms/step - binary_accuracy: 0.9967 - loss: 0.0090 - val_binary_accuracy: 0.9934 - val_loss: 0.0195 - learning_rate: 0.0010
+Epoch 6/30
+79/79 - 17s - 215ms/step - binary_accuracy: 0.9971 - loss: 0.0079 - val_binary_accuracy: 0.9942 - val_loss: 0.0163 - learning_rate: 0.0010
+Epoch 7/30
+79/79 - 15s - 188ms/step - binary_accuracy: 0.9976 - loss: 0.0066 - val_binary_accuracy: 0.9948 - val_loss: 0.0161 - learning_rate: 0.0010
+Epoch 8/30
+79/79 - 15s - 187ms/step - binary_accuracy: 0.9981 - loss: 0.0054 - val_binary_accuracy: 0.9942 - val_loss: 0.0169 - learning_rate: 0.0010
+Epoch 9/30
+79/79 - 15s - 193ms/step - binary_accuracy: 0.9981 - loss: 0.0051 - val_binary_accuracy: 0.9944 - val_loss: 0.0181 - learning_rate: 0.0010
+Epoch 10/30
+79/79 - 15s - 194ms/step - binary_accuracy: 0.9987 - loss: 0.0037 - val_binary_accuracy: 0.9942 - val_loss: 0.0189 - learning_rate: 0.0010
+Epoch 11/30
+79/79 - 15s - 188ms/step - binary_accuracy: 0.9994 - loss: 0.0020 - val_binary_accuracy: 0.9943 - val_loss: 0.0201 - learning_rate: 5.0000e-04
+Epoch 12/30
+79/79 - 15s - 187ms/step - binary_accuracy: 0.9996 - loss: 0.0015 - val_binary_accuracy: 0.9943 - val_loss: 0.0209 - learning_rate: 5.0000e-04
+Epoch 13/30
+79/79 - 15s - 187ms/step - binary_accuracy: 0.9997 - loss: 0.0013 - val_binary_accuracy: 0.9944 - val_loss: 0.0218 - learning_rate: 5.0000e-04
+[บันทึกโมเดล] models\qpsk_demod.keras
+------------------------------------------------------------
+ ผลบน validation:  Accuracy = 99.44%  |  BER = 5.6250e-03
+------------------------------------------------------------
+[บันทึกกราฟ] results\qpsk_training.png

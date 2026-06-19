@@ -18,14 +18,14 @@ def _nearest_symbol(iq_point: complex, constellation: np.ndarray) -> int:
 BPSK_CONST = np.array([-1+0j, 1+0j], dtype=np.complex128)
 BPSK_BITS  = [[0], [1]]
 
-# ---------- QPSK (Gray) ----------
-QPSK_CONST = np.array([
+# ---------- QAM4 = QPSK (Gray) ----------
+QAM4_CONST = np.array([
     (-1-1j) / np.sqrt(2),
     (-1+1j) / np.sqrt(2),
     ( 1-1j) / np.sqrt(2),
     ( 1+1j) / np.sqrt(2),
 ], dtype=np.complex128)
-QPSK_BITS = [[0, 0], [0, 1], [1, 0], [1, 1]]
+QAM4_BITS = [[0, 0], [0, 1], [1, 0], [1, 1]]
 
 def _build_square_qam(bits_per_axis: int):
     """สร้าง constellation + bit table สำหรับ Square QAM ทุกขนาด"""
@@ -66,14 +66,11 @@ def _build_cross_qam8():
 QAM8_CONST, QAM8_BITS = _build_cross_qam8()
 # ---------- 16-QAM (Gray) ----------
 QAM16_CONST, QAM16_BITS  = _build_square_qam(2)
-# ---------- 64-QAM (Gray) ----------
-QAM64_CONST, QAM64_BITS  = _build_square_qam(3)
 CONSTELLATIONS = {
     "bpsk":  (BPSK_CONST,  BPSK_BITS),
-    "qpsk":  (QPSK_CONST,  QPSK_BITS),
+    "qam4":  (QAM4_CONST,  QAM4_BITS),
     "qam8":  (QAM8_CONST,  QAM8_BITS),
     "qam16": (QAM16_CONST, QAM16_BITS),
-    "qam64": (QAM64_CONST, QAM64_BITS),
 }
 
 
@@ -116,7 +113,7 @@ def demodulate(iq: np.ndarray, mod_type: str, sps: int = 1) -> list[int]:
     ถ้า sps > 1 จะผ่าน Matched Filter (integrate-and-dump) ก่อนตัดสินใจ
 
     iq       : complex ndarray
-    mod_type : 'bpsk' | 'qpsk' | 'qam8' | 'qam16' | 'qam64'
+    mod_type : 'bpsk' | 'qam4' | 'qam8' | 'qam16'
     sps      : samples ต่อสัญลักษณ์
     """
     mod_type = mod_type.lower()

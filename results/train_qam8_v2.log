@@ -1,0 +1,78 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781208054.135046    7880 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781208056.438310    7880 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1781208059.259193    7880 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+============================================================
+ เทรน Demodulator: QAM8 (3 บิต/สัญลักษณ์)
+============================================================
+กำลังสร้างชุดข้อมูล train/val ...
+  X_train=(6000, 512, 2), y_train=(6000, 64, 3)
+  X_val  =(1200, 512, 2), y_val  =(1200, 64, 3)
+Model: "CNN_LSTM_Demodulator"
+┌─────────────────────────────────┬────────────────────────┬───────────────┐
+│ Layer (type)                    │ Output Shape           │       Param # │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ iq_input (InputLayer)           │ (None, 512, 2)         │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d (Conv1D)                 │ (None, 512, 64)        │           704 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization             │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d_1 (Conv1D)               │ (None, 512, 64)        │        20,544 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization_1           │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ reshape (Reshape)               │ (None, 64, 512)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional (Bidirectional)   │ (None, 64, 256)        │       656,384 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 64, 256)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ time_distributed                │ (None, 64, 64)         │        16,448 │
+│ (TimeDistributed)               │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bit_output (TimeDistributed)    │ (None, 64, 3)          │           195 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 694,787 (2.65 MB)
+ Trainable params: 694,531 (2.65 MB)
+ Non-trainable params: 256 (1.00 KB)
+Epoch 1/35
+94/94 - 25s - 269ms/step - binary_accuracy: 0.9524 - loss: 0.1179 - val_binary_accuracy: 0.6562 - val_loss: 1.1726 - learning_rate: 0.0010
+Epoch 2/35
+94/94 - 18s - 192ms/step - binary_accuracy: 0.9761 - loss: 0.0586 - val_binary_accuracy: 0.7287 - val_loss: 1.1829 - learning_rate: 0.0010
+Epoch 3/35
+94/94 - 18s - 188ms/step - binary_accuracy: 0.9773 - loss: 0.0554 - val_binary_accuracy: 0.7752 - val_loss: 0.7836 - learning_rate: 0.0010
+Epoch 4/35
+94/94 - 17s - 184ms/step - binary_accuracy: 0.9781 - loss: 0.0533 - val_binary_accuracy: 0.8722 - val_loss: 0.3899 - learning_rate: 0.0010
+Epoch 5/35
+94/94 - 17s - 184ms/step - binary_accuracy: 0.9788 - loss: 0.0514 - val_binary_accuracy: 0.9625 - val_loss: 0.1038 - learning_rate: 0.0010
+Epoch 6/35
+94/94 - 17s - 185ms/step - binary_accuracy: 0.9796 - loss: 0.0492 - val_binary_accuracy: 0.9757 - val_loss: 0.0614 - learning_rate: 0.0010
+Epoch 7/35
+94/94 - 17s - 183ms/step - binary_accuracy: 0.9806 - loss: 0.0470 - val_binary_accuracy: 0.9775 - val_loss: 0.0560 - learning_rate: 0.0010
+Epoch 8/35
+94/94 - 17s - 185ms/step - binary_accuracy: 0.9815 - loss: 0.0447 - val_binary_accuracy: 0.9776 - val_loss: 0.0552 - learning_rate: 0.0010
+Epoch 9/35
+94/94 - 17s - 183ms/step - binary_accuracy: 0.9826 - loss: 0.0421 - val_binary_accuracy: 0.9778 - val_loss: 0.0566 - learning_rate: 0.0010
+Epoch 10/35
+94/94 - 17s - 183ms/step - binary_accuracy: 0.9839 - loss: 0.0393 - val_binary_accuracy: 0.9770 - val_loss: 0.0597 - learning_rate: 0.0010
+Epoch 11/35
+94/94 - 17s - 181ms/step - binary_accuracy: 0.9854 - loss: 0.0359 - val_binary_accuracy: 0.9773 - val_loss: 0.0597 - learning_rate: 0.0010
+Epoch 12/35
+94/94 - 17s - 181ms/step - binary_accuracy: 0.9882 - loss: 0.0301 - val_binary_accuracy: 0.9774 - val_loss: 0.0623 - learning_rate: 5.0000e-04
+Epoch 13/35
+94/94 - 17s - 182ms/step - binary_accuracy: 0.9896 - loss: 0.0267 - val_binary_accuracy: 0.9771 - val_loss: 0.0651 - learning_rate: 5.0000e-04
+Epoch 14/35
+94/94 - 17s - 183ms/step - binary_accuracy: 0.9906 - loss: 0.0244 - val_binary_accuracy: 0.9768 - val_loss: 0.0669 - learning_rate: 5.0000e-04
+Epoch 15/35
+94/94 - 17s - 182ms/step - binary_accuracy: 0.9920 - loss: 0.0210 - val_binary_accuracy: 0.9770 - val_loss: 0.0694 - learning_rate: 2.5000e-04
+[บันทึกโมเดล] models\qam8_demod.keras
+------------------------------------------------------------
+ ผลบน validation:  Accuracy = 97.70%  |  BER = 2.2977e-02
+------------------------------------------------------------
+[บันทึกกราฟ] results\qam8_training.png

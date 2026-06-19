@@ -5,10 +5,9 @@ generate_signal.py
 
 รองรับ modulation 7 ประเภท:
     - BPSK   (digital, 1 บิต/สัญลักษณ์)
-    - QPSK   (digital, 2 บิต/สัญลักษณ์)
+    - QAM4   (digital, 2 บิต/สัญลักษณ์)
+    - QAM8   (digital, 3 บิต/สัญลักษณ์)
     - QAM16  (digital, 4 บิต/สัญลักษณ์)
-    - QAM64  (digital, 6 บิต/สัญลักษณ์)
-    - QAM256 (digital, 8 บิต/สัญลักษณ์)
     - AM     (analog)
     - FM     (analog)
 
@@ -27,10 +26,9 @@ import numpy as np
 # จำนวนบิตต่อสัญลักษณ์ของแต่ละ modulation แบบดิจิทัล
 BITS_PER_SYMBOL = {
     "bpsk":  1,
-    "qpsk":  2,
+    "qam4":  2,
     "qam8":  3,
     "qam16": 4,
-    "qam64": 6,
 }
 
 DIGITAL_MODS = list(BITS_PER_SYMBOL.keys())
@@ -54,8 +52,8 @@ def bpsk_map(bits: np.ndarray) -> np.ndarray:
     return (2 * bits - 1).astype(np.complex64)
 
 
-def qpsk_map(bits: np.ndarray) -> np.ndarray:
-    """Gray-coded QPSK, 2 บิต/สัญลักษณ์"""
+def qam4_map(bits: np.ndarray) -> np.ndarray:
+    """Gray-coded QAM4 (= QPSK), 2 บิต/สัญลักษณ์"""
     b = bits.reshape(-1, 2)
     i = 2 * b[:, 0] - 1
     q = 2 * b[:, 1] - 1
@@ -112,16 +110,11 @@ def qam8_map(bits: np.ndarray) -> np.ndarray:
     return lut[idx]
 
 
-def qam64_map(bits: np.ndarray) -> np.ndarray:
-    return _qam_map(bits, 6)
-
-
 DIGITAL_MAPPERS = {
     "bpsk":  bpsk_map,
-    "qpsk":  qpsk_map,
+    "qam4":  qam4_map,
     "qam8":  qam8_map,
     "qam16": qam16_map,
-    "qam64": qam64_map,
 }
 
 
@@ -240,7 +233,7 @@ def generate_signal(mod_type: str, n_symbols: int = 128, sps: int = 8,
 # --------------------------------------------------------------------------- #
 #  สร้าง dataset สำหรับเทรน/ทดสอบโมเดล (เฉพาะ digital modulation)
 # --------------------------------------------------------------------------- #
-def generate_dataset(mod_type: str = "qpsk",
+def generate_dataset(mod_type: str = "qam4",
                      n_examples: int = 2000,
                      symbols_per_example: int = 64,
                      sps: int = 8,
@@ -289,5 +282,5 @@ if __name__ == "__main__":
         nbits = "-" if bits is None else len(bits)
         print(f"  {m:6s} -> IQ length={len(iq):4d}, bits={nbits}")
 
-    X, y = generate_dataset("qpsk", n_examples=10)
-    print(f"\nDataset QPSK: X={X.shape}, y={y.shape}")
+    X, y = generate_dataset("qam4", n_examples=10)
+    print(f"\nDataset QAM4: X={X.shape}, y={y.shape}")

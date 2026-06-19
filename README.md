@@ -1,3 +1,12 @@
+---
+title: AI Demodulation
+emoji: 📡
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # AI Demodulation 📡🤖
 
 โปรเจค **Deep Learning สำหรับ Demodulation สัญญาณวิทยุ** ด้วยโมเดล **CNN + LSTM**  

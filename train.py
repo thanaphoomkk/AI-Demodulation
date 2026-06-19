@@ -4,7 +4,7 @@ train.py
 เทรนโมเดล CNN+LSTM Demodulator
 
 วิธีใช้:
-    python train.py                 # ค่าเริ่มต้น: QPSK
+    python train.py                 # ค่าเริ่มต้น: QAM4
     python train.py --mod bpsk
     python train.py --mod qam16 --epochs 30
 
@@ -74,7 +74,7 @@ def plot_history(history, mod: str, out_path: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="เทรน CNN+LSTM Demodulator")
-    parser.add_argument("--mod", default="qpsk",
+    parser.add_argument("--mod", default="qam4",
                         choices=list(BITS_PER_SYMBOL.keys()),
                         help="ชนิด modulation ที่จะเทรน")
     parser.add_argument("--epochs", type=int, default=25)

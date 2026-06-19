@@ -1,0 +1,73 @@
+============================================================
+ เทรน Demodulator: QAM64 (6 บิต/สัญลักษณ์)
+============================================================
+กำลังสร้างชุดข้อมูล train/val ...
+  X_train=(6000, 512, 2), y_train=(6000, 64, 6)
+  X_val  =(1200, 512, 2), y_val  =(1200, 64, 6)
+Model: "CNN_LSTM_Demodulator"
+┌─────────────────────────────────┬────────────────────────┬───────────────┐
+│ Layer (type)                    │ Output Shape           │       Param # │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ iq_input (InputLayer)           │ (None, 512, 2)         │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d (Conv1D)                 │ (None, 512, 64)        │           704 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization             │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d_1 (Conv1D)               │ (None, 512, 64)        │        20,544 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization_1           │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ reshape (Reshape)               │ (None, 64, 512)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional (Bidirectional)   │ (None, 64, 256)        │       656,384 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 64, 256)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ time_distributed                │ (None, 64, 64)         │        16,448 │
+│ (TimeDistributed)               │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bit_output (TimeDistributed)    │ (None, 64, 6)          │           390 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 694,982 (2.65 MB)
+ Trainable params: 694,726 (2.65 MB)
+ Non-trainable params: 256 (1.00 KB)
+Epoch 1/35
+94/94 - 48s - 516ms/step - binary_accuracy: 0.8767 - loss: 0.2709 - val_binary_accuracy: 0.6005 - val_loss: 1.2916 - learning_rate: 0.0010
+Epoch 2/35
+94/94 - 37s - 397ms/step - binary_accuracy: 0.9407 - loss: 0.1454 - val_binary_accuracy: 0.5794 - val_loss: 1.0218 - learning_rate: 0.0010
+Epoch 3/35
+94/94 - 36s - 378ms/step - binary_accuracy: 0.9438 - loss: 0.1312 - val_binary_accuracy: 0.5887 - val_loss: 0.9279 - learning_rate: 0.0010
+Epoch 4/35
+94/94 - 37s - 392ms/step - binary_accuracy: 0.9454 - loss: 0.1255 - val_binary_accuracy: 0.6626 - val_loss: 0.7076 - learning_rate: 0.0010
+Epoch 5/35
+94/94 - 35s - 377ms/step - binary_accuracy: 0.9463 - loss: 0.1223 - val_binary_accuracy: 0.7851 - val_loss: 0.5084 - learning_rate: 0.0010
+Epoch 6/35
+94/94 - 36s - 382ms/step - binary_accuracy: 0.9474 - loss: 0.1197 - val_binary_accuracy: 0.9022 - val_loss: 0.2169 - learning_rate: 0.0010
+Epoch 7/35
+94/94 - 35s - 377ms/step - binary_accuracy: 0.9480 - loss: 0.1181 - val_binary_accuracy: 0.9423 - val_loss: 0.1303 - learning_rate: 0.0010
+Epoch 8/35
+94/94 - 36s - 382ms/step - binary_accuracy: 0.9484 - loss: 0.1172 - val_binary_accuracy: 0.9475 - val_loss: 0.1177 - learning_rate: 0.0010
+Epoch 9/35
+94/94 - 36s - 382ms/step - binary_accuracy: 0.9490 - loss: 0.1157 - val_binary_accuracy: 0.9500 - val_loss: 0.1118 - learning_rate: 0.0010
+Epoch 10/35
+94/94 - 36s - 383ms/step - binary_accuracy: 0.9494 - loss: 0.1144 - val_binary_accuracy: 0.9505 - val_loss: 0.1106 - learning_rate: 0.0010
+Epoch 11/35
+94/94 - 36s - 380ms/step - binary_accuracy: 0.9498 - loss: 0.1132 - val_binary_accuracy: 0.9491 - val_loss: 0.1129 - learning_rate: 0.0010
+Epoch 12/35
+94/94 - 36s - 378ms/step - binary_accuracy: 0.9503 - loss: 0.1124 - val_binary_accuracy: 0.9491 - val_loss: 0.1138 - learning_rate: 0.0010
+Epoch 13/35
+94/94 - 36s - 378ms/step - binary_accuracy: 0.9506 - loss: 0.1116 - val_binary_accuracy: 0.9495 - val_loss: 0.1115 - learning_rate: 0.0010
+Epoch 14/35
+94/94 - 31s - 325ms/step - binary_accuracy: 0.9520 - loss: 0.1082 - val_binary_accuracy: 0.9500 - val_loss: 0.1108 - learning_rate: 5.0000e-04
+Epoch 15/35
+94/94 - 19s - 205ms/step - binary_accuracy: 0.9524 - loss: 0.1076 - val_binary_accuracy: 0.9501 - val_loss: 0.1106 - learning_rate: 5.0000e-04
+Epoch 16/35
+94/94 - 18s - 195ms/step - binary_accuracy: 0.9528 - loss: 0.1066 - val_binary_accuracy: 0.9500 - val_loss: 0.1105 - learning_rate: 5.0000e-04
+[บันทึกโมเดล] models\qam64_demod.keras
+------------------------------------------------------------
+ ผลบน validation:  Accuracy = 95.00%  |  BER = 4.9985e-02
+------------------------------------------------------------
+[บันทึกกราฟ] results\qam64_training.png

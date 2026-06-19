@@ -1,0 +1,76 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781879596.172465     520 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781879605.099461     520 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1781879612.857182     520 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+============================================================
+ เทรน Demodulator: QAM4 (2 บิต/สัญลักษณ์)
+============================================================
+กำลังสร้างชุดข้อมูล train/val ...
+  X_train=(5000, 512, 2), y_train=(5000, 64, 2)
+  X_val  =(1000, 512, 2), y_val  =(1000, 64, 2)
+Model: "CNN_LSTM_Demodulator"
+┌─────────────────────────────────┬────────────────────────┬───────────────┐
+│ Layer (type)                    │ Output Shape           │       Param # │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ iq_input (InputLayer)           │ (None, 512, 2)         │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d (Conv1D)                 │ (None, 512, 64)        │           704 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization             │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ conv1d_1 (Conv1D)               │ (None, 512, 64)        │        20,544 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ batch_normalization_1           │ (None, 512, 64)        │           256 │
+│ (BatchNormalization)            │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ reshape (Reshape)               │ (None, 64, 512)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bidirectional (Bidirectional)   │ (None, 64, 256)        │       656,384 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ dropout (Dropout)               │ (None, 64, 256)        │             0 │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ time_distributed                │ (None, 64, 64)         │        16,448 │
+│ (TimeDistributed)               │                        │               │
+├─────────────────────────────────┼────────────────────────┼───────────────┤
+│ bit_output (TimeDistributed)    │ (None, 64, 2)          │           130 │
+└─────────────────────────────────┴────────────────────────┴───────────────┘
+ Total params: 694,722 (2.65 MB)
+ Trainable params: 694,466 (2.65 MB)
+ Non-trainable params: 256 (1.00 KB)
+Epoch 1/30
+79/79 - 30s - 379ms/step - binary_accuracy: 0.9818 - loss: 0.0532 - val_binary_accuracy: 0.7665 - val_loss: 0.3759 - learning_rate: 0.0010
+Epoch 2/30
+79/79 - 40s - 501ms/step - binary_accuracy: 0.9956 - loss: 0.0125 - val_binary_accuracy: 0.8842 - val_loss: 0.3168 - learning_rate: 0.0010
+Epoch 3/30
+79/79 - 16s - 208ms/step - binary_accuracy: 0.9960 - loss: 0.0111 - val_binary_accuracy: 0.9663 - val_loss: 0.1498 - learning_rate: 0.0010
+Epoch 4/30
+79/79 - 18s - 226ms/step - binary_accuracy: 0.9963 - loss: 0.0102 - val_binary_accuracy: 0.9836 - val_loss: 0.0608 - learning_rate: 0.0010
+Epoch 5/30
+79/79 - 20s - 255ms/step - binary_accuracy: 0.9966 - loss: 0.0092 - val_binary_accuracy: 0.9892 - val_loss: 0.0307 - learning_rate: 0.0010
+Epoch 6/30
+79/79 - 20s - 255ms/step - binary_accuracy: 0.9972 - loss: 0.0079 - val_binary_accuracy: 0.9932 - val_loss: 0.0193 - learning_rate: 0.0010
+Epoch 7/30
+79/79 - 20s - 256ms/step - binary_accuracy: 0.9974 - loss: 0.0070 - val_binary_accuracy: 0.9938 - val_loss: 0.0174 - learning_rate: 0.0010
+Epoch 8/30
+79/79 - 20s - 258ms/step - binary_accuracy: 0.9979 - loss: 0.0059 - val_binary_accuracy: 0.9944 - val_loss: 0.0170 - learning_rate: 0.0010
+Epoch 9/30
+79/79 - 20s - 258ms/step - binary_accuracy: 0.9984 - loss: 0.0045 - val_binary_accuracy: 0.9942 - val_loss: 0.0185 - learning_rate: 0.0010
+Epoch 10/30
+79/79 - 20s - 254ms/step - binary_accuracy: 0.9989 - loss: 0.0033 - val_binary_accuracy: 0.9943 - val_loss: 0.0189 - learning_rate: 0.0010
+Epoch 11/30
+79/79 - 20s - 258ms/step - binary_accuracy: 0.9991 - loss: 0.0028 - val_binary_accuracy: 0.9942 - val_loss: 0.0208 - learning_rate: 0.0010
+Epoch 12/30
+79/79 - 20s - 255ms/step - binary_accuracy: 0.9995 - loss: 0.0017 - val_binary_accuracy: 0.9944 - val_loss: 0.0216 - learning_rate: 5.0000e-04
+Epoch 13/30
+79/79 - 20s - 253ms/step - binary_accuracy: 0.9997 - loss: 0.0012 - val_binary_accuracy: 0.9942 - val_loss: 0.0222 - learning_rate: 5.0000e-04
+Epoch 14/30
+79/79 - 20s - 254ms/step - binary_accuracy: 0.9997 - loss: 0.0011 - val_binary_accuracy: 0.9941 - val_loss: 0.0231 - learning_rate: 5.0000e-04
+[บันทึกโมเดล] models\qam4_demod.keras
+------------------------------------------------------------
+ ผลบน validation:  Accuracy = 99.41%  |  BER = 5.8516e-03
+------------------------------------------------------------
+[บันทึกกราฟ] results\qam4_training.png

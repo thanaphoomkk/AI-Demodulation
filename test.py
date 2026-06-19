@@ -6,12 +6,12 @@ test.py
 สิ่งที่ทำ:
     1) วัดความแม่นยำ (Accuracy) และ BER ของโมเดลดิจิทัลที่เทรนไว้
        ที่ระดับ SNR ต่าง ๆ  -> พิมพ์ตาราง + วาดกราฟ BER vs SNR
-    2) แสดงภาพสัญญาณทั้ง 5 ประเภท (BPSK, QPSK, QAM16, AM, FM)
+    2) แสดงภาพสัญญาณทั้ง 5 ประเภท (BPSK, QAM4, QAM16, AM, FM)
        ทั้ง constellation และรูปคลื่นเชิงเวลา
 
 วิธีใช้:
     python test.py                # ทดสอบทุกโมเดลที่มีใน models/
-    python test.py --mod qpsk     # ทดสอบเฉพาะ QPSK
+    python test.py --mod qam4     # ทดสอบเฉพาะ QAM4
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ def infer_model_shape(model):
 # --------------------------------------------------------------------------- #
 def plot_ber_curve(all_results: dict, out_path: str) -> None:
     plt.figure(figsize=(8, 5.5))
-    markers = {"bpsk": "o-", "qpsk": "s-", "qam16": "^-"}
+    markers = {"bpsk": "o-", "qam4": "s-", "qam16": "^-"}
     for mod, res in all_results.items():
         snrs = sorted(res.keys())
         bers = [res[s][1] + 1e-6 for s in snrs]
