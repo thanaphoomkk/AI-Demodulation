@@ -315,7 +315,12 @@
         <div class="form-group">
           <label>SNR: <span class="snr-label" id="wl-snr-val">10 dB</span></label>
           <input type="range" id="wl-snr" min="-5" max="25" value="10"
-                 oninput="document.getElementById('wl-snr-val').textContent=this.value+' dB'">
+                 oninput="onWlSnrChange(this.value)">
+          <label style="margin-top:6px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="wl-no-noise" onchange="onWlNoNoiseChange(this.checked)"
+                   style="width:16px;height:16px;cursor:pointer;">
+            <span style="color:#34d399;font-size:0.85rem;font-weight:600;">ไม่มี Noise (Clean Signal)</span>
+          </label>
         </div>
         <div class="form-group">
           <label>Carrier fc: <span class="snr-label" id="wl-fc-val">0.10</span></label>
@@ -568,12 +573,28 @@ async function runUpload() {
   }
 }
 
+function onWlSnrChange(val) {
+  document.getElementById('wl-snr-val').textContent = val + ' dB';
+  document.getElementById('wl-no-noise').checked = false;
+}
+
+function onWlNoNoiseChange(checked) {
+  const snrLabel = document.getElementById('wl-snr-val');
+  if (checked) {
+    snrLabel.textContent = '∞ (Clean)';
+  } else {
+    const v = document.getElementById('wl-snr').value;
+    snrLabel.textContent = v + ' dB';
+  }
+}
+
 async function runWaveLab() {
   const btn  = document.getElementById('wl-btn');
   const spin = document.getElementById('wl-spin');
   const err  = document.getElementById('wl-err');
   err.textContent = '';
   btn.disabled = true; spin.style.display = 'inline-block';
+  const noNoise = document.getElementById('wl-no-noise').checked;
   try {
     const res = await fetch('/api/wavelab', {
       method: 'POST',
@@ -581,7 +602,7 @@ async function runWaveLab() {
       body: JSON.stringify({
         mod:       document.getElementById('wl-mod').value,
         n_symbols: document.getElementById('wl-nsym').value,
-        snr:       document.getElementById('wl-snr').value,
+        snr:       noNoise ? 999 : document.getElementById('wl-snr').value,
         fc:        document.getElementById('wl-fc').value / 100,
       })
     });
