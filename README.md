@@ -12,10 +12,10 @@ pinned: false
 โปรเจค **Deep Learning สำหรับ Demodulation สัญญาณวิทยุ** ด้วยโมเดล **CNN + LSTM**  
 รับ IQ samples เข้ามาแล้วถอดรหัสกลับเป็นบิต `0/1` และเปรียบเทียบกับ Classical Matched Filter
 
-รองรับสัญญาณดิจิทัล 5 ประเภท: **BPSK, QPSK, QAM8, QAM16, QAM64**  
+รองรับสัญญาณดิจิทัล 4 ประเภท: **BPSK, QAM4, QAM8, QAM16**  
 และ Analog: **AM, FM** (สร้าง/แสดงสัญญาณ)
 
-🌐 **Demo:** https://ai-demodulation.onrender.com
+🌐 **Demo:** https://thanaphoomm-ai-demodulation.hf.space
 
 ---
 
@@ -32,10 +32,9 @@ ai-demodulation/
 ├── render.yaml           # config สำหรับ deploy บน Render.com
 ├── models/               # โมเดลที่เทรนแล้ว (.keras)
 │   ├── bpsk_demod.keras
-│   ├── qpsk_demod.keras
+│   ├── qam4_demod.keras
 │   ├── qam8_demod.keras
-│   ├── qam16_demod.keras
-│   └── qam64_demod.keras
+│   └── qam16_demod.keras
 ├── templates/
 │   └── index.html        # Web UI (4 แท็บ)
 └── results/              # กราฟผลการเทรน
@@ -63,10 +62,9 @@ python app.py
 
 ```bash
 python train.py --mod bpsk
-python train.py --mod qpsk
+python train.py --mod qam4
 python train.py --mod qam8
 python train.py --mod qam16
-python train.py --mod qam64 --epochs 40 --n_train 8000
 ```
 
 ผลลัพธ์ → `models/<mod>_demod.keras` และ `results/<mod>_training.png`
@@ -140,12 +138,11 @@ IQ noisy (512 samples, 2 channels)
 | Modulation | bits/symbol | Accuracy | BER |
 |------------|-------------|----------|-----|
 | BPSK | 1 | 99.95% | 0.00048 |
-| QPSK | 2 | 99.44% | 0.0056 |
+| QAM4 | 2 | 99.41% | 0.0059 |
 | QAM8 | 3 | 97.70% | 0.023 |
 | QAM16 | 4 | 96.66% | 0.033 |
-| QAM64 | 6 | 92.85% | 0.072 |
 
-> BER ของ QAM64 สูงกว่า BPSK เพราะมี 64 constellation points อยู่ใกล้กัน noise นิดเดียวก็ผิดได้
+> BER ของ QAM16 สูงกว่า BPSK เพราะมี 16 constellation points อยู่ใกล้กัน noise นิดเดียวก็ผิดได้
 
 ---
 
@@ -167,7 +164,7 @@ IQ noisy (512 samples, 2 channels)
 
 ### 4. 📊 Comparison
 - **Real-time BER**: ปรับ SNR → เห็นตารางทุก modulation ทันที ว่า AI หรือ Classical ดีกว่า
-- **BER vs SNR ทุก Mod**: กราฟ 5 subplot เปรียบเทียบ AI vs Classical ทุก modulation พร้อมกัน
+- **BER vs SNR ทุก Mod**: กราฟ 4 subplot เปรียบเทียบ AI vs Classical ทุก modulation พร้อมกัน
 
 ---
 
@@ -206,5 +203,5 @@ Output: (None, 64, bps)         ← บิตของทุก symbol พร้
 ## ⚠️ หมายเหตุ
 
 - AM/FM เป็น analog modulation ใช้สำหรับแสดงสัญญาณเท่านั้น ไม่มีโมเดล AI
-- ถ้า Render ไม่มี TensorFlow จะ fallback ใช้ Classical อัตโนมัติ
+- ถ้าโมเดลโหลดไม่ได้ จะ fallback ใช้ Classical อัตโนมัติ
 - โมเดลต้องการ input ขนาด 512 samples — ถ้าสัญญาณสั้นกว่า จะ zero-pad อัตโนมัติ
